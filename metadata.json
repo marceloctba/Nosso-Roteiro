@@ -1,0 +1,6 @@
+{
+  "name": "Nosso Roteiro",
+  "description": "Agenda e roteiros compartilhados entre contas Gmail com sincronização no Google Agenda e avisos por Gmail.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

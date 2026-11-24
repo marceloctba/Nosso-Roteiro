@@ -1,0 +1,375 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Private profile of an authenticated user identified by their Gmail account.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "description": "Firebase Auth UID of the user.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "Lowercase Gmail address of the user.",
+          "minLength": 3,
+          "maxLength": 254
+        },
+        "displayName": {
+          "type": "string",
+          "description": "Display name of the user.",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "photoURL": {
+          "type": "string",
+          "description": "Optional avatar URL from Google account.",
+          "maxLength": 500
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when user profile was created."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when user profile was last updated."
+        }
+      },
+      "required": ["uid", "email", "displayName", "createdAt", "updatedAt"]
+    },
+    "Itinerary": {
+      "title": "Itinerary",
+      "description": "A shared itinerary (roteiro) accessible and editable by all linked Gmail accounts.",
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string",
+          "description": "Title of the itinerary, e.g., Natal.",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "coverImageData": {
+          "type": "string",
+          "description": "Optional compressed data URL of the user-uploaded cover image.",
+          "maxLength": 250000
+        },
+        "ownerUid": {
+          "type": "string",
+          "description": "UID of the itinerary creator.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "ownerEmail": {
+          "type": "string",
+          "format": "email",
+          "description": "Lowercase Gmail address of the itinerary creator.",
+          "minLength": 3,
+          "maxLength": 254
+        },
+        "linkedEmails": {
+          "type": "array",
+          "description": "Bounded list (1-25) of lowercase Gmail addresses with full collaboration access."
+        },
+        "calendarSyncEnabled": {
+          "type": "boolean",
+          "description": "Whether Google Calendar sync is suggested on event save."
+        },
+        "notifyOnChanges": {
+          "type": "boolean",
+          "description": "Whether Gmail notifications are suggested on date additions or updates."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when itinerary was created."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when itinerary was last updated."
+        }
+      },
+      "required": [
+        "title",
+        "coverImageData",
+        "ownerUid",
+        "ownerEmail",
+        "linkedEmails",
+        "calendarSyncEnabled",
+        "notifyOnChanges",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "ItineraryEvent": {
+      "title": "ItineraryEvent",
+      "description": "A scheduled date/activity inside a shared itinerary.",
+      "type": "object",
+      "properties": {
+        "itineraryId": {
+          "type": "string",
+          "description": "Parent itinerary document ID.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "title": {
+          "type": "string",
+          "description": "Activity name, e.g., Disney Celebra.",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "date": {
+          "type": "string",
+          "description": "Event date in YYYY-MM-DD format.",
+          "minLength": 10,
+          "maxLength": 10,
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+        },
+        "time": {
+          "type": "string",
+          "description": "Start time in HH:MM 24h format.",
+          "minLength": 5,
+          "maxLength": 5,
+          "pattern": "^\\d{2}:\\d{2}$"
+        },
+        "endTime": {
+          "type": "string",
+          "description": "Optional end time in HH:MM format or empty string.",
+          "maxLength": 5
+        },
+        "location": {
+          "type": "string",
+          "description": "Optional map-linked location or venue.",
+          "maxLength": 240
+        },
+        "links": {
+          "type": "array",
+          "description": "Bounded list (0-10) of external links attached to this event."
+        },
+        "attachments": {
+          "type": "array",
+          "description": "Bounded list (0-10) of PDF or image file metadata references."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["planejado", "concluido"],
+          "description": "Completion state of the activity.",
+          "maxLength": 20
+        },
+        "googleCalendarEventId": {
+          "type": "string",
+          "description": "Linked Google Calendar event ID for idempotent updates.",
+          "maxLength": 256
+        },
+        "lastCalendarSyncAt": {
+          "type": "string",
+          "description": "ISO timestamp of the latest Google Calendar sync.",
+          "maxLength": 40
+        },
+        "linkedEmails": {
+          "type": "array",
+          "description": "Denormalized bounded list (1-25) matching parent itinerary linkedEmails."
+        },
+        "createdByUid": {
+          "type": "string",
+          "description": "UID of the user who created the event.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "createdByEmail": {
+          "type": "string",
+          "format": "email",
+          "description": "Lowercase email of the user who created the event.",
+          "minLength": 3,
+          "maxLength": 254
+        },
+        "updatedByEmail": {
+          "type": "string",
+          "format": "email",
+          "description": "Lowercase email of the last user who modified the event.",
+          "minLength": 3,
+          "maxLength": 254
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when event was created."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when event was last updated."
+        }
+      },
+      "required": [
+        "itineraryId",
+        "title",
+        "date",
+        "time",
+        "endTime",
+        "location",
+        "links",
+        "attachments",
+        "status",
+        "googleCalendarEventId",
+        "lastCalendarSyncAt",
+        "linkedEmails",
+        "createdByUid",
+        "createdByEmail",
+        "updatedByEmail",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "ItineraryFile": {
+      "title": "ItineraryFile",
+      "description": "Uploaded PDF or image attachment belonging to an itinerary event.",
+      "type": "object",
+      "properties": {
+        "itineraryId": {
+          "type": "string",
+          "description": "Parent itinerary document ID.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "name": {
+          "type": "string",
+          "description": "Original filename.",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "mimeType": {
+          "type": "string",
+          "enum": ["application/pdf", "image/jpeg", "image/png", "image/webp", "image/gif"],
+          "description": "Validated MIME type.",
+          "maxLength": 40
+        },
+        "sizeBytes": {
+          "type": "integer",
+          "description": "Decoded file size in bytes (max 700KB)."
+        },
+        "dataUrl": {
+          "type": "string",
+          "description": "Base64 data URL of the PDF or compressed image.",
+          "minLength": 10,
+          "maxLength": 950000
+        },
+        "linkedEmails": {
+          "type": "array",
+          "description": "Denormalized bounded list (1-25) matching parent itinerary linkedEmails."
+        },
+        "uploadedByEmail": {
+          "type": "string",
+          "format": "email",
+          "description": "Lowercase email of the uploader.",
+          "minLength": 3,
+          "maxLength": 254
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when file was uploaded."
+        }
+      },
+      "required": [
+        "itineraryId",
+        "name",
+        "mimeType",
+        "sizeBytes",
+        "dataUrl",
+        "linkedEmails",
+        "uploadedByEmail",
+        "createdAt"
+      ]
+    },
+    "ItineraryActivity": {
+      "title": "ItineraryActivity",
+      "description": "Audit entry of additions, edits, calendar syncs, or email alerts inside an itinerary.",
+      "type": "object",
+      "properties": {
+        "itineraryId": {
+          "type": "string",
+          "description": "Parent itinerary document ID.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "action": {
+          "type": "string",
+          "enum": [
+            "created_event",
+            "updated_event",
+            "deleted_event",
+            "synced_calendar",
+            "sent_email",
+            "updated_members"
+          ],
+          "description": "Type of activity performed.",
+          "maxLength": 32
+        },
+        "summary": {
+          "type": "string",
+          "description": "Human-readable description of the activity.",
+          "minLength": 1,
+          "maxLength": 240
+        },
+        "actorEmail": {
+          "type": "string",
+          "format": "email",
+          "description": "Lowercase email of the user who triggered the action.",
+          "minLength": 3,
+          "maxLength": 254
+        },
+        "linkedEmails": {
+          "type": "array",
+          "description": "Denormalized bounded list (1-25) matching parent itinerary linkedEmails."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when activity occurred."
+        }
+      },
+      "required": [
+        "itineraryId",
+        "action",
+        "summary",
+        "actorEmail",
+        "linkedEmails",
+        "createdAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "Private user profiles keyed by Firebase Auth UID."
+    },
+    "/itineraries/{itineraryId}": {
+      "schema": { "$ref": "#/entities/Itinerary" },
+      "description": "Shared itineraries accessible to all linked Gmail accounts."
+    },
+    "/itineraries/{itineraryId}/events/{eventId}": {
+      "schema": { "$ref": "#/entities/ItineraryEvent" },
+      "description": "Agenda items belonging to an itinerary."
+    },
+    "/itineraries/{itineraryId}/files/{fileId}": {
+      "schema": { "$ref": "#/entities/ItineraryFile" },
+      "description": "PDF and image attachments for itinerary events."
+    },
+    "/itineraries/{itineraryId}/activity/{activityId}": {
+      "schema": { "$ref": "#/entities/ItineraryActivity" },
+      "description": "Shared activity log for an itinerary."
+    }
+  }
+}

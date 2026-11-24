@@ -1,0 +1,508 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global default-deny safety net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Core primitives
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isEmailVerified() {
+      return isSignedIn()
+        && request.auth.token.email is string
+        && request.auth.token.email.size() >= 3
+        && request.auth.token.email.size() <= 254
+        && request.auth.token.email_verified == true;
+    }
+
+    function userEmailLower() {
+      return request.auth.token.email.lower();
+    }
+
+    function isValidEmailString(val) {
+      return val is string
+        && val.size() >= 3
+        && val.size() <= 254
+        && val.matches('^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$')
+        && val == val.lower();
+    }
+
+    function isValidEmailList(listVal) {
+      return listVal is list
+        && listVal.size() >= 1
+        && listVal.size() <= 25
+        && isValidEmailString(listVal[0]);
+    }
+
+    function isValidLinksList(listVal) {
+      return listVal is list
+        && listVal.size() <= 10
+        && (listVal.size() == 0 || (
+          listVal[0] is map
+          && listVal[0].keys().hasAll(['label', 'url'])
+          && listVal[0].keys().hasOnly(['label', 'url'])
+          && listVal[0].label is string
+          && listVal[0].label.size() <= 80
+          && listVal[0].url is string
+          && listVal[0].url.size() >= 4
+          && listVal[0].url.size() <= 500
+        ));
+    }
+
+    function isValidAttachmentsList(listVal) {
+      return listVal is list
+        && listVal.size() <= 10
+        && (listVal.size() == 0 || (
+          listVal[0] is map
+          && listVal[0].keys().hasAll(['fileId', 'name', 'mimeType', 'sizeBytes'])
+          && listVal[0].keys().hasOnly(['fileId', 'name', 'mimeType', 'sizeBytes'])
+          && isValidId(listVal[0].fileId)
+          && listVal[0].name is string
+          && listVal[0].name.size() >= 1
+          && listVal[0].name.size() <= 160
+          && listVal[0].mimeType is string
+          && listVal[0].mimeType in ['application/pdf', 'image/jpeg', 'image/png', 'image/webp', 'image/gif']
+          && listVal[0].sizeBytes is int
+          && listVal[0].sizeBytes >= 1
+          && listVal[0].sizeBytes <= 700000
+        ));
+    }
+
+    // Entity validators
+    function isValidUserProfile(data) {
+      return data.keys().hasAll(['uid', 'email', 'displayName', 'createdAt', 'updatedAt'])
+        && data.keys().hasOnly(['uid', 'email', 'displayName', 'photoURL', 'createdAt', 'updatedAt'])
+        && data.uid is string
+        && data.uid == request.auth.uid
+        && isValidId(data.uid)
+        && isValidEmailString(data.email)
+        && data.email == userEmailLower()
+        && data.displayName is string
+        && data.displayName.size() >= 1
+        && data.displayName.size() <= 120
+        && (!('photoURL' in data) || (data.photoURL is string && data.photoURL.size() <= 500))
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidItinerary(data) {
+      return data.keys().hasAll([
+          'title',
+          'coverImageData',
+          'ownerUid',
+          'ownerEmail',
+          'linkedEmails',
+          'calendarSyncEnabled',
+          'notifyOnChanges',
+          'createdAt',
+          'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'title',
+          'coverImageData',
+          'description',
+          'coverKey',
+          'ownerUid',
+          'ownerEmail',
+          'linkedEmails',
+          'calendarSyncEnabled',
+          'notifyOnChanges',
+          'createdAt',
+          'updatedAt'
+        ])
+        && data.title is string
+        && data.title.size() >= 1
+        && data.title.size() <= 120
+        && data.coverImageData is string
+        && data.coverImageData.size() <= 250000
+        && (!('description' in data) || (data.description is string && data.description.size() <= 500))
+        && (!('coverKey' in data) || (data.coverKey is string && data.coverKey.size() <= 32))
+        && isValidId(data.ownerUid)
+        && isValidEmailString(data.ownerEmail)
+        && isValidEmailList(data.linkedEmails)
+        && (data.ownerEmail in data.linkedEmails)
+        && data.calendarSyncEnabled is bool
+        && data.notifyOnChanges is bool
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidEvent(data, itineraryId) {
+      return data.keys().hasAll([
+          'itineraryId',
+          'title',
+          'date',
+          'time',
+          'endTime',
+          'location',
+          'links',
+          'attachments',
+          'status',
+          'googleCalendarEventId',
+          'lastCalendarSyncAt',
+          'linkedEmails',
+          'createdByUid',
+          'createdByEmail',
+          'updatedByEmail',
+          'createdAt',
+          'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'itineraryId',
+          'title',
+          'date',
+          'time',
+          'endTime',
+          'location',
+          'links',
+          'attachments',
+          'notes',
+          'category',
+          'status',
+          'googleCalendarEventId',
+          'lastCalendarSyncAt',
+          'linkedEmails',
+          'createdByUid',
+          'createdByEmail',
+          'updatedByEmail',
+          'createdAt',
+          'updatedAt'
+        ])
+        && data.itineraryId is string
+        && data.itineraryId == itineraryId
+        && data.title is string
+        && data.title.size() >= 1
+        && data.title.size() <= 160
+        && data.date is string
+        && data.date.size() == 10
+        && data.date.matches('^\\d{4}-\\d{2}-\\d{2}$')
+        && data.time is string
+        && data.time.size() == 5
+        && data.time.matches('^\\d{2}:\\d{2}$')
+        && data.endTime is string
+        && (data.endTime.size() == 0 || (data.endTime.size() == 5 && data.endTime.matches('^\\d{2}:\\d{2}$')))
+        && data.location is string
+        && data.location.size() <= 240
+        && isValidLinksList(data.links)
+        && isValidAttachmentsList(data.attachments)
+        && (!('notes' in data) || (data.notes is string && data.notes.size() <= 1000))
+        && (!('category' in data) || (data.category is string && data.category.size() <= 20))
+        && data.status is string
+        && data.status in ['planejado', 'confirmado', 'concluido']
+        && data.googleCalendarEventId is string
+        && data.googleCalendarEventId.size() <= 256
+        && data.lastCalendarSyncAt is string
+        && data.lastCalendarSyncAt.size() <= 40
+        && isValidEmailList(data.linkedEmails)
+        && isValidId(data.createdByUid)
+        && isValidEmailString(data.createdByEmail)
+        && isValidEmailString(data.updatedByEmail)
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidFile(data, itineraryId) {
+      return data.keys().hasAll([
+          'itineraryId',
+          'name',
+          'mimeType',
+          'sizeBytes',
+          'dataUrl',
+          'linkedEmails',
+          'uploadedByEmail',
+          'createdAt'
+        ])
+        && data.keys().hasOnly([
+          'itineraryId',
+          'name',
+          'mimeType',
+          'sizeBytes',
+          'dataUrl',
+          'linkedEmails',
+          'uploadedByEmail',
+          'createdAt'
+        ])
+        && data.itineraryId is string
+        && data.itineraryId == itineraryId
+        && data.name is string
+        && data.name.size() >= 1
+        && data.name.size() <= 160
+        && data.mimeType is string
+        && data.mimeType in ['application/pdf', 'image/jpeg', 'image/png', 'image/webp', 'image/gif']
+        && data.sizeBytes is int
+        && data.sizeBytes >= 1
+        && data.sizeBytes <= 700000
+        && data.dataUrl is string
+        && data.dataUrl.size() >= 10
+        && data.dataUrl.size() <= 950000
+        && isValidEmailList(data.linkedEmails)
+        && isValidEmailString(data.uploadedByEmail)
+        && data.createdAt is timestamp;
+    }
+
+    function isValidActivity(data, itineraryId) {
+      return data.keys().hasAll([
+          'itineraryId',
+          'action',
+          'summary',
+          'actorEmail',
+          'linkedEmails',
+          'createdAt'
+        ])
+        && data.keys().hasOnly([
+          'itineraryId',
+          'action',
+          'summary',
+          'actorEmail',
+          'linkedEmails',
+          'createdAt'
+        ])
+        && data.itineraryId is string
+        && data.itineraryId == itineraryId
+        && data.action is string
+        && data.action in [
+          'created_event',
+          'updated_event',
+          'deleted_event',
+          'synced_calendar',
+          'sent_email',
+          'updated_members'
+        ]
+        && data.summary is string
+        && data.summary.size() >= 1
+        && data.summary.size() <= 240
+        && isValidEmailString(data.actorEmail)
+        && isValidEmailList(data.linkedEmails)
+        && data.createdAt is timestamp;
+    }
+
+    function isLinkedToParentItinerary(itineraryId) {
+      return exists(/databases/$(database)/documents/itineraries/$(itineraryId))
+        && (userEmailLower() in get(/databases/$(database)/documents/itineraries/$(itineraryId)).data.linkedEmails);
+    }
+
+    function parentLinkedEmailsMatch(itineraryId, listVal) {
+      return listVal == get(/databases/$(database)/documents/itineraries/$(itineraryId)).data.linkedEmails;
+    }
+
+    // /users/{userId} - strictly private to owner
+    match /users/{userId} {
+      allow get: if isEmailVerified() && isValidId(userId) && request.auth.uid == userId;
+      allow list: if false;
+      allow create: if isEmailVerified()
+        && isValidId(userId)
+        && request.auth.uid == userId
+        && isValidUserProfile(incoming())
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isEmailVerified()
+        && isValidId(userId)
+        && request.auth.uid == userId
+        && isValidUserProfile(incoming())
+        && incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'photoURL', 'updatedAt'])
+        && incoming().uid == existing().uid
+        && incoming().email == existing().email
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time;
+      allow delete: if false;
+    }
+
+    // /itineraries/{itineraryId} - shared across linked Gmail accounts
+    match /itineraries/{itineraryId} {
+      allow get: if isEmailVerified()
+        && isValidId(itineraryId)
+        && (userEmailLower() in existing().linkedEmails);
+
+      allow list: if isEmailVerified()
+        && (userEmailLower() in existing().linkedEmails);
+
+      allow create: if isEmailVerified()
+        && isValidId(itineraryId)
+        && isValidItinerary(incoming())
+        && incoming().ownerUid == request.auth.uid
+        && incoming().ownerEmail == userEmailLower()
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+
+      allow update: if isEmailVerified()
+        && isValidId(itineraryId)
+        && isValidItinerary(incoming())
+        && (userEmailLower() in existing().linkedEmails)
+        && incoming().ownerUid == existing().ownerUid
+        && incoming().ownerEmail == existing().ownerEmail
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && (
+          incoming().diff(existing()).affectedKeys().hasOnly([
+            'title',
+            'coverImageData',
+            'calendarSyncEnabled',
+            'notifyOnChanges',
+            'updatedAt'
+          ])
+          || (
+            incoming().diff(existing()).affectedKeys().hasOnly(['linkedEmails', 'updatedAt'])
+            && (existing().ownerEmail in incoming().linkedEmails)
+          )
+        );
+
+      allow delete: if isEmailVerified()
+        && isValidId(itineraryId)
+        && existing().ownerUid == request.auth.uid;
+
+      // /itineraries/{itineraryId}/events/{eventId}
+      match /events/{eventId} {
+        allow get: if isEmailVerified()
+          && isValidId(itineraryId)
+          && isValidId(eventId)
+          && isLinkedToParentItinerary(itineraryId);
+
+        allow list: if isEmailVerified()
+          && isValidId(itineraryId)
+          && (userEmailLower() in existing().linkedEmails);
+
+        allow create: if isEmailVerified()
+          && isValidId(itineraryId)
+          && isValidId(eventId)
+          && isValidEvent(incoming(), itineraryId)
+          && incoming().createdByUid == request.auth.uid
+          && incoming().createdByEmail == userEmailLower()
+          && incoming().updatedByEmail == userEmailLower()
+          && incoming().createdAt == request.time
+          && incoming().updatedAt == request.time
+          && isLinkedToParentItinerary(itineraryId)
+          && parentLinkedEmailsMatch(itineraryId, incoming().linkedEmails);
+
+        allow update: if isEmailVerified()
+          && isValidId(itineraryId)
+          && isValidId(eventId)
+          && isValidEvent(incoming(), itineraryId)
+          && incoming().itineraryId == existing().itineraryId
+          && incoming().createdByUid == existing().createdByUid
+          && incoming().createdByEmail == existing().createdByEmail
+          && incoming().createdAt == existing().createdAt
+          && incoming().updatedAt == request.time
+          && isLinkedToParentItinerary(itineraryId)
+          && (
+            (
+              incoming().diff(existing()).affectedKeys().hasOnly([
+                'title',
+                'date',
+                'time',
+                'endTime',
+                'location',
+                'links',
+                'attachments',
+                'status',
+                'updatedByEmail',
+                'updatedAt'
+              ])
+              && incoming().updatedByEmail == userEmailLower()
+            )
+            || (
+              incoming().diff(existing()).affectedKeys().hasOnly([
+                'googleCalendarEventId',
+                'lastCalendarSyncAt',
+                'updatedByEmail',
+                'updatedAt'
+              ])
+              && incoming().updatedByEmail == userEmailLower()
+            )
+            || (
+              incoming().diff(existing()).affectedKeys().hasOnly(['linkedEmails', 'updatedAt'])
+              && incoming().linkedEmails == getAfter(/databases/$(database)/documents/itineraries/$(itineraryId)).data.linkedEmails
+            )
+          );
+
+        allow delete: if isEmailVerified()
+          && isValidId(itineraryId)
+          && isValidId(eventId)
+          && isLinkedToParentItinerary(itineraryId);
+      }
+
+      // /itineraries/{itineraryId}/files/{fileId}
+      match /files/{fileId} {
+        allow get: if isEmailVerified()
+          && isValidId(itineraryId)
+          && isValidId(fileId)
+          && isLinkedToParentItinerary(itineraryId);
+
+        allow list: if isEmailVerified()
+          && isValidId(itineraryId)
+          && (userEmailLower() in existing().linkedEmails);
+
+        allow create: if isEmailVerified()
+          && isValidId(itineraryId)
+          && isValidId(fileId)
+          && isValidFile(incoming(), itineraryId)
+          && incoming().uploadedByEmail == userEmailLower()
+          && incoming().createdAt == request.time
+          && isLinkedToParentItinerary(itineraryId)
+          && parentLinkedEmailsMatch(itineraryId, incoming().linkedEmails);
+
+        allow update: if isEmailVerified()
+          && isValidId(itineraryId)
+          && isValidId(fileId)
+          && isValidFile(incoming(), itineraryId)
+          && isLinkedToParentItinerary(itineraryId)
+          && incoming().diff(existing()).affectedKeys().hasOnly(['linkedEmails'])
+          && incoming().linkedEmails == getAfter(/databases/$(database)/documents/itineraries/$(itineraryId)).data.linkedEmails;
+
+        allow delete: if isEmailVerified()
+          && isValidId(itineraryId)
+          && isValidId(fileId)
+          && isLinkedToParentItinerary(itineraryId);
+      }
+
+      // /itineraries/{itineraryId}/activity/{activityId}
+      match /activity/{activityId} {
+        allow get: if isEmailVerified()
+          && isValidId(itineraryId)
+          && isValidId(activityId)
+          && isLinkedToParentItinerary(itineraryId);
+
+        allow list: if isEmailVerified()
+          && isValidId(itineraryId)
+          && (userEmailLower() in existing().linkedEmails);
+
+        allow create: if isEmailVerified()
+          && isValidId(itineraryId)
+          && isValidId(activityId)
+          && isValidActivity(incoming(), itineraryId)
+          && incoming().actorEmail == userEmailLower()
+          && incoming().createdAt == request.time
+          && isLinkedToParentItinerary(itineraryId)
+          && parentLinkedEmailsMatch(itineraryId, incoming().linkedEmails);
+
+        allow update: if isEmailVerified()
+          && isValidId(itineraryId)
+          && isValidId(activityId)
+          && isValidActivity(incoming(), itineraryId)
+          && isLinkedToParentItinerary(itineraryId)
+          && incoming().diff(existing()).affectedKeys().hasOnly(['linkedEmails'])
+          && incoming().linkedEmails == getAfter(/databases/$(database)/documents/itineraries/$(itineraryId)).data.linkedEmails;
+
+        allow delete: if isEmailVerified()
+          && isValidId(itineraryId)
+          && isValidId(activityId)
+          && isLinkedToParentItinerary(itineraryId);
+      }
+    }
+  }
+}
