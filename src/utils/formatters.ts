@@ -58,9 +58,9 @@ export function formatDateHeading(yyyyMmDd: string): {
 } {
   if (!yyyyMmDd) {
     return {
-      dayMonth: 'Em aberto',
-      weekday: 'Sem data definida',
-      monthLabel: 'Locais e ideias',
+      dayMonth: '',
+      weekday: 'Locais e ideias',
+      monthLabel: '',
     };
   }
   const dt = parseLocalDate(yyyyMmDd);

@@ -178,14 +178,22 @@ export const AgendaTimeline: React.FC<AgendaTimelineProps> = ({
             return (
               <section key={dateStr || 'em-aberto'} className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
                 <div className="px-5 py-3.5 bg-slate-50/80 border-b border-slate-200 flex items-baseline justify-between gap-4">
-                  <div className="flex items-baseline gap-2.5">
-                    <span className="font-mono tabular-nums text-base font-bold text-rose-600">
-                      {heading.dayMonth}
-                    </span>
-                    <span className="text-sm font-semibold text-slate-900">{heading.weekday}</span>
-                    <span className="text-xs text-slate-500">{heading.monthLabel}</span>
+                  <div className="flex items-baseline gap-2.5 min-w-0">
+                    {heading.dayMonth && (
+                      <span className="font-mono tabular-nums text-base font-bold text-rose-600 shrink-0">
+                        {heading.dayMonth}
+                      </span>
+                    )}
+                    {heading.weekday && (
+                      <span className="text-sm font-semibold text-slate-900 truncate">
+                        {heading.weekday}
+                      </span>
+                    )}
+                    {heading.monthLabel && (
+                      <span className="text-xs text-slate-500 shrink-0">{heading.monthLabel}</span>
+                    )}
                   </div>
-                  <span className="font-mono tabular-nums text-xs text-slate-500">
+                  <span className="font-mono tabular-nums text-xs text-slate-500 whitespace-nowrap shrink-0">
                     {dayEvents.length} {dayEvents.length === 1 ? 'atividade' : 'atividades'}
                   </span>
                 </div>
