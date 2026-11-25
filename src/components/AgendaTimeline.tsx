@@ -4,7 +4,6 @@ import {
   CalendarPlus,
   CheckCircle2,
   Circle,
-  ExternalLink,
   FileText,
   Image as ImageIcon,
   Link2,
@@ -293,10 +292,9 @@ export const AgendaTimeline: React.FC<AgendaTimelineProps> = ({
                                             href={link.url}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="font-medium text-rose-600 hover:underline truncate inline-flex items-center gap-1 min-w-0"
+                                            className="font-medium text-rose-600 hover:underline truncate"
                                           >
-                                            <span className="truncate">{link.label || link.url}</span>
-                                            <ExternalLink className="w-3 h-3 shrink-0" />
+                                            {link.label || link.url}
                                           </a>
                                         </li>
                                       ))}
