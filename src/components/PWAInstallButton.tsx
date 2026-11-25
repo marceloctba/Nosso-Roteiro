@@ -21,7 +21,7 @@ export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({ variant = 'h
         onClick={() => void install()}
         className={
           variant === 'full'
-            ? 'w-full min-h-[44px] flex items-center justify-center gap-2 rounded-xl bg-teal-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-teal-800 transition-colors cursor-pointer whitespace-nowrap shrink-0'
+            ? 'w-full min-h-[44px] flex items-center justify-center gap-2 rounded-xl bg-rose-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-rose-700 transition-colors cursor-pointer whitespace-nowrap shrink-0'
             : 'min-h-[40px] flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-xs font-semibold text-slate-800 hover:bg-slate-50 transition-colors cursor-pointer whitespace-nowrap shrink-0'
         }
       >
@@ -71,27 +71,27 @@ export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({ variant = 'h
               </div>
               <ol className="mt-4 space-y-3 text-sm text-slate-700 leading-relaxed">
                 <li className="flex items-start gap-3">
-                  <span className="font-mono text-xs font-semibold text-teal-900 mt-0.5">01</span>
+                  <span className="font-mono text-xs font-semibold text-rose-600 mt-0.5">01</span>
                   <span>
                     Toque no botão <strong className="inline-flex items-center gap-1 font-semibold text-slate-900"><Share className="w-3.5 h-3.5" /> Compartilhar</strong> na barra do Safari.
                   </span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <span className="font-mono text-xs font-semibold text-teal-900 mt-0.5">02</span>
+                  <span className="font-mono text-xs font-semibold text-rose-600 mt-0.5">02</span>
                   <span>
                     Role as opções e toque em{' '}
                     <strong className="inline-flex items-center gap-1 font-semibold text-slate-900"><PlusSquare className="w-3.5 h-3.5" /> Adicionar à Tela de Início</strong>.
                   </span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <span className="font-mono text-xs font-semibold text-teal-900 mt-0.5">03</span>
+                  <span className="font-mono text-xs font-semibold text-rose-600 mt-0.5">03</span>
                   <span>Confirme tocando em <strong>Adicionar</strong> no canto superior direito.</span>
                 </li>
               </ol>
               <button
                 type="button"
                 onClick={() => setShowIOSGuide(false)}
-                className="mt-6 w-full min-h-[44px] rounded-xl bg-teal-900 py-2.5 text-sm font-semibold text-white hover:bg-teal-800 transition-colors cursor-pointer"
+                className="mt-6 w-full min-h-[44px] rounded-xl bg-rose-600 py-2.5 text-sm font-semibold text-white hover:bg-rose-700 transition-colors cursor-pointer"
               >
                 Entendi
               </button>

@@ -289,7 +289,7 @@ export default function App() {
       if (eventModalMode === 'create') {
         const created = await createItineraryEvent(activeItinerary, input, user);
         setEventModalOpen(false);
-        showToast('success', `Data "${input.title}" adicionada ao roteiro.`);
+        showToast('success', `Atividade "${input.title}" adicionada ao roteiro.`);
         if (activeItinerary.calendarSyncEnabled || activeItinerary.notifyOnChanges) {
           setSyncPromptState({ open: true, changeType: 'created', event: created });
         }
@@ -301,13 +301,13 @@ export default function App() {
         };
         setEventModalOpen(false);
         setEditingEvent(null);
-        showToast('success', `Data "${input.title}" atualizada.`);
+        showToast('success', `Atividade "${input.title}" atualizada.`);
         if (activeItinerary.calendarSyncEnabled || activeItinerary.notifyOnChanges) {
           setSyncPromptState({ open: true, changeType: 'updated', event: updatedSnapshot });
         }
       }
     } catch (err) {
-      showToast('error', err instanceof Error ? err.message : 'Erro ao salvar compromisso.');
+      showToast('error', err instanceof Error ? err.message : 'Erro ao salvar atividade.');
     } finally {
       setIsSavingEvent(false);
     }
@@ -316,7 +316,7 @@ export default function App() {
   const handleToggleEventStatus = async (ev: ItineraryEvent) => {
     if (!user || !activeItinerary) return;
     if (isEventPast(ev)) {
-      showToast('success', 'Esta data já passou e é marcada como concluída automaticamente.');
+      showToast('success', 'Esta atividade já passou e é marcada como concluída automaticamente.');
       return;
     }
     const nextStatus = ev.status === 'concluido' ? 'planejado' : 'concluido';
@@ -431,6 +431,13 @@ export default function App() {
 
   const requestSyncSingleCalendar = (ev: ItineraryEvent) => {
     if (!activeItinerary) return;
+    if (!ev.date || !ev.time) {
+      showToast(
+        'error',
+        'Defina uma data e um horário para marcar esta atividade no Google Agenda.'
+      );
+      return;
+    }
     const isUpdate = Boolean(ev.googleCalendarEventId);
     setPendingConfirm({
       title: isUpdate
@@ -440,7 +447,7 @@ export default function App() {
         ? 'Os horários, local e convidados deste evento serão atualizados na sua agenda principal do Google.'
         : 'Este compromisso será criado na sua agenda principal do Google com os participantes convidados.',
       details: [
-        `Evento: ${formatDateShort(ev.date)} · ${ev.title}`,
+        `Atividade: ${formatDateShort(ev.date)} · ${ev.title}`,
         `Horário: ${ev.time}${ev.endTime ? ` – ${ev.endTime}` : ''}`,
         ev.location ? `Local: ${ev.location}` : 'Sem local definido',
         `Participantes: ${activeItinerary.linkedEmails.join(', ')}`,
@@ -461,12 +468,20 @@ export default function App() {
   };
 
   const requestSyncAllCalendar = () => {
-    if (!activeItinerary || events.length === 0) return;
+    if (!activeItinerary) return;
+    const syncable = events.filter((ev) => Boolean(ev.date && ev.time));
+    if (syncable.length === 0) {
+      showToast(
+        'error',
+        'Nenhuma atividade com data e horário definidos para sincronizar com o Google Agenda.'
+      );
+      return;
+    }
     setPendingConfirm({
-      title: `Sincronizar ${events.length} data(s) com o Google Agenda?`,
+      title: `Sincronizar ${syncable.length} atividade(s) com o Google Agenda?`,
       description:
-        'Todas as datas deste roteiro serão criadas ou atualizadas na sua agenda principal do Google, convidando os participantes.',
-      details: events
+        'Todas as atividades com data e horário definidos serão criadas ou atualizadas na sua agenda principal do Google, convidando os participantes.',
+      details: syncable
         .slice(0, 5)
         .map(
           (ev) =>
@@ -481,7 +496,7 @@ export default function App() {
         const token = await ensureWorkspaceToken();
         if (!user) return;
         let count = 0;
-        for (const ev of events) {
+        for (const ev of syncable) {
           const res = await syncEventToGoogleCalendar(token, activeItinerary, ev);
           await markEventCalendarSynced(
             activeItinerary,
@@ -492,7 +507,7 @@ export default function App() {
           );
           count++;
         }
-        showToast('success', `${count} compromisso(s) sincronizado(s) com o Google Agenda.`);
+        showToast('success', `${count} atividade(s) sincronizada(s) com o Google Agenda.`);
       },
     });
   };
@@ -501,15 +516,17 @@ export default function App() {
     if (!activeItinerary || !user?.email) return;
     const others = activeItinerary.linkedEmails.filter((e) => e !== user.email!.toLowerCase());
     const recipients = others.length > 0 ? others : activeItinerary.linkedEmails;
+    const whenSuffix = ev.date ? ` (${formatDateShort(ev.date)})` : ' (Em aberto)';
+    const timeLabel = ev.time ? ev.time : 'Em aberto';
 
     setPendingConfirm({
       title: 'Enviar aviso pelo Gmail?',
       description:
-        'Um e-mail com os detalhes atualizados desta data será enviado pelo seu Gmail para os participantes do roteiro.',
+        'Um e-mail com os detalhes atualizados desta atividade será enviado pelo seu Gmail para os participantes do roteiro.',
       details: [
-        `Assunto: [Nosso Roteiro · ${activeItinerary.title}] Data: ${ev.title} (${formatDateShort(ev.date)})`,
+        `Assunto: [Nosso Roteiro · ${activeItinerary.title}] Atividade: ${ev.title}${whenSuffix}`,
         `Para: ${recipients.join(', ')}`,
-        `Horário: ${ev.time}${ev.location ? ` · Local: ${ev.location}` : ''}`,
+        `Horário: ${timeLabel}${ev.location ? ` · Local: ${ev.location}` : ''}`,
       ],
       confirmLabel: 'Enviar e-mail',
       tone: 'workspace',
@@ -531,7 +548,7 @@ export default function App() {
       description:
         'Todos os participantes receberão a programação completa atualizada em suas caixas de entrada.',
       details: [
-        `Roteiro: ${activeItinerary.title} (${events.length} datas)`,
+        `Roteiro: ${activeItinerary.title} (${events.length} atividades)`,
         `Para: ${recipients.join(', ')}`,
       ],
       confirmLabel: 'Enviar resumo',
@@ -547,16 +564,19 @@ export default function App() {
   const requestDeleteEvent = (ev: ItineraryEvent) => {
     if (!activeItinerary || !user) return;
     const hasCal = Boolean(ev.googleCalendarEventId);
+    const whenText = ev.date
+      ? `${formatDateShort(ev.date)}${ev.time ? ` às ${ev.time}` : ' · Horário em aberto'}`
+      : ev.time
+        ? `Data em aberto · às ${ev.time}`
+        : 'Data e horário em aberto';
+
     setPendingConfirm({
       title: `Remover "${ev.title}" do roteiro?`,
       description: hasCal
-        ? 'Esta data será removida do roteiro compartilhado e também cancelada no seu Google Agenda.'
-        : 'Esta data será removida permanentemente do roteiro compartilhado.',
-      details: [
-        `Data: ${formatDateShort(ev.date)} às ${ev.time}`,
-        ev.location ? `Local: ${ev.location}` : '',
-      ].filter(Boolean),
-      confirmLabel: 'Remover data',
+        ? 'Esta atividade será removida do roteiro compartilhado e também cancelada no seu Google Agenda.'
+        : 'Esta atividade será removida permanentemente do roteiro compartilhado.',
+      details: [whenText, ev.location ? `Local: ${ev.location}` : ''].filter(Boolean),
+      confirmLabel: 'Remover atividade',
       tone: 'danger',
       iconType: 'delete',
       action: async () => {
@@ -579,9 +599,9 @@ export default function App() {
     setPendingConfirm({
       title: `Excluir o roteiro "${activeItinerary.title}"?`,
       description:
-        'Todas as datas, anexos e o histórico deste roteiro serão removidos para todos os participantes. Esta ação não pode ser desfeita.',
+        'Todas as atividades, anexos e o histórico deste roteiro serão removidos para todos os participantes. Esta ação não pode ser desfeita.',
       details: [
-        `${events.length} data(s) cadastrada(s)`,
+        `${events.length} atividade(s) cadastrada(s)`,
         `Participantes: ${activeItinerary.linkedEmails.length}`,
       ],
       confirmLabel: 'Excluir roteiro',
@@ -632,6 +652,7 @@ export default function App() {
   const userEmail = (user.email || '').toLowerCase();
   const isOwner = activeItinerary?.ownerUid === user.uid;
   const hasCustomCover = Boolean(activeItinerary?.coverImageData);
+  const syncableEventsCount = events.filter((ev) => Boolean(ev.date && ev.time)).length;
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
@@ -663,7 +684,7 @@ export default function App() {
               onClick={() => setDesktopTab(item.id)}
               className={`py-2 border-b-2 transition-colors cursor-pointer whitespace-nowrap shrink-0 ${
                 desktopTab === item.id
-                  ? 'border-teal-900 text-slate-900 font-semibold'
+                  ? 'border-rose-600 text-slate-900 font-semibold'
                   : 'border-transparent text-slate-600 hover:text-slate-900'
               }`}
             >
@@ -679,7 +700,7 @@ export default function App() {
               setItineraryModalMode('create');
               setItineraryModalOpen(true);
             }}
-            className="min-h-[40px] px-4 py-2 rounded-xl bg-teal-900 text-xs font-semibold text-white hover:bg-teal-800 transition-colors cursor-pointer inline-flex items-center gap-1.5 whitespace-nowrap shrink-0"
+            className="min-h-[40px] px-4 py-2 rounded-xl bg-rose-600 text-xs font-semibold text-white hover:bg-rose-700 transition-colors cursor-pointer inline-flex items-center gap-1.5 whitespace-nowrap shrink-0"
           >
             <Plus className="w-4 h-4" />
             <span>Novo roteiro</span>
@@ -704,10 +725,10 @@ export default function App() {
               setItineraryModalOpen(true);
             }
           }}
-          className="min-h-[40px] px-3.5 py-1.5 rounded-xl bg-teal-900 text-xs font-semibold text-white hover:bg-teal-800 transition-colors cursor-pointer inline-flex items-center gap-1.5 whitespace-nowrap shrink-0"
+          className="min-h-[40px] px-3.5 py-1.5 rounded-xl bg-rose-600 text-xs font-semibold text-white hover:bg-rose-700 transition-colors cursor-pointer inline-flex items-center gap-1.5 whitespace-nowrap shrink-0"
         >
           <Plus className="w-4 h-4" />
-          <span>{mobileTab === 'agenda' && activeItinerary ? 'Nova data' : 'Novo roteiro'}</span>
+          <span>{mobileTab === 'agenda' && activeItinerary ? 'Nova atividade' : 'Novo roteiro'}</span>
         </button>
       </header>
 
@@ -744,12 +765,12 @@ export default function App() {
                         type="button"
                         onClick={() => setSelectedItineraryId(it.id)}
                         className={`w-full text-left px-4 py-3.5 transition-colors cursor-pointer ${
-                          selected ? 'bg-teal-50/70' : 'hover:bg-slate-50'
+                          selected ? 'bg-rose-50/75' : 'hover:bg-slate-50'
                         }`}
                       >
                         <p
                           className={`text-sm font-semibold truncate ${
-                            selected ? 'text-teal-950' : 'text-slate-900'
+                            selected ? 'text-rose-900' : 'text-slate-900'
                           }`}
                         >
                           {it.title}
@@ -778,7 +799,7 @@ export default function App() {
                 <span className="text-slate-600">Google Agenda & Gmail</span>
                 <span
                   className={
-                    workspaceReady ? 'font-semibold text-teal-900' : 'text-amber-700 font-medium'
+                    workspaceReady ? 'font-semibold text-rose-600' : 'text-amber-700 font-medium'
                   }
                 >
                   {workspaceReady ? 'Conectado' : 'Pendente'}
@@ -843,7 +864,7 @@ export default function App() {
                     setItineraryModalMode('create');
                     setItineraryModalOpen(true);
                   }}
-                  className="mt-5 min-h-[44px] px-5 py-2.5 rounded-xl bg-teal-900 text-xs font-semibold text-white cursor-pointer"
+                  className="mt-5 min-h-[44px] px-5 py-2.5 rounded-xl bg-rose-600 text-xs font-semibold text-white hover:bg-rose-700 transition-colors cursor-pointer"
                 >
                   Novo roteiro
                 </button>
@@ -910,7 +931,7 @@ export default function App() {
                   type="button"
                   onClick={() => void handleConnectWorkspace()}
                   disabled={workspaceConnecting}
-                  className="w-full min-h-[44px] px-4 py-2.5 rounded-xl bg-teal-900 text-sm font-semibold text-white hover:bg-teal-800 transition-colors cursor-pointer"
+                  className="w-full min-h-[44px] px-4 py-2.5 rounded-xl bg-rose-600 text-sm font-semibold text-white hover:bg-rose-700 transition-colors cursor-pointer"
                 >
                   {workspaceConnecting
                     ? 'Conectando...'
@@ -961,7 +982,7 @@ export default function App() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5 pt-4 border-t border-slate-200">
                 <div className="p-5 rounded-2xl border border-slate-200 bg-slate-50/70 space-y-3">
                   <div className="flex items-center gap-2.5">
-                    <CalendarCheck className="w-5 h-5 text-teal-900" />
+                    <CalendarCheck className="w-5 h-5 text-rose-600" />
                     <h2 className="font-display text-base font-bold text-slate-900">
                       Google Agenda & Gmail
                     </h2>
@@ -972,7 +993,7 @@ export default function App() {
                   </p>
                   <p className="text-xs font-medium text-slate-800">
                     Status:{' '}
-                    <span className={workspaceReady ? 'text-teal-900' : 'text-amber-700'}>
+                    <span className={workspaceReady ? 'text-rose-600' : 'text-amber-700'}>
                       {workspaceReady
                         ? `Conectado (${getWorkspaceConnectedEmail() || userEmail})`
                         : 'Aguardando autorização nesta sessão'}
@@ -982,7 +1003,7 @@ export default function App() {
                     type="button"
                     onClick={() => void handleConnectWorkspace()}
                     disabled={workspaceConnecting}
-                    className="min-h-[44px] px-4 py-2 rounded-xl bg-teal-900 text-xs font-semibold text-white hover:bg-teal-800 transition-colors cursor-pointer"
+                    className="min-h-[44px] px-4 py-2 rounded-xl bg-rose-600 text-xs font-semibold text-white hover:bg-rose-700 transition-colors cursor-pointer"
                   >
                     {workspaceConnecting
                       ? 'Autorizando...'
@@ -994,7 +1015,7 @@ export default function App() {
 
                 <div className="p-5 rounded-2xl border border-slate-200 bg-slate-50/70 space-y-3">
                   <div className="flex items-center gap-2.5">
-                    <Smartphone className="w-5 h-5 text-teal-900" />
+                    <Smartphone className="w-5 h-5 text-rose-600" />
                     <h2 className="font-display text-base font-bold text-slate-900">
                       Instalação no celular e desktop
                     </h2>
@@ -1036,7 +1057,7 @@ export default function App() {
                       setItineraryModalMode('create');
                       setItineraryModalOpen(true);
                     }}
-                    className="mt-6 min-h-[44px] px-6 py-2.5 rounded-xl bg-teal-900 text-sm font-semibold text-white hover:bg-teal-800 transition-colors cursor-pointer inline-flex items-center gap-2"
+                    className="mt-6 min-h-[44px] px-6 py-2.5 rounded-xl bg-rose-600 text-sm font-semibold text-white hover:bg-rose-700 transition-colors cursor-pointer inline-flex items-center gap-2"
                   >
                     <Plus className="w-4 h-4" />
                     <span>Novo roteiro</span>
@@ -1076,7 +1097,7 @@ export default function App() {
                             }`}
                           >
                             <span className="font-mono tabular-nums">
-                              {events.length} {events.length === 1 ? 'data' : 'datas'}
+                              {events.length} {events.length === 1 ? 'atividade' : 'atividades'}
                             </span>
                             <span aria-hidden="true">·</span>
                             <span>
@@ -1099,10 +1120,10 @@ export default function App() {
                         <button
                           type="button"
                           onClick={requestSyncAllCalendar}
-                          disabled={events.length === 0}
+                          disabled={syncableEventsCount === 0}
                           className="min-h-[40px] px-3.5 py-2 rounded-xl border border-slate-300 bg-white text-xs font-semibold text-slate-800 hover:bg-slate-50 transition-colors cursor-pointer disabled:opacity-45 inline-flex items-center gap-1.5 whitespace-nowrap"
                         >
-                          <CalendarCheck className="w-4 h-4 text-teal-900" />
+                          <CalendarCheck className="w-4 h-4 text-rose-600" />
                           <span>Sincronizar Agenda</span>
                         </button>
 
@@ -1111,7 +1132,7 @@ export default function App() {
                           onClick={requestSendDigestEmail}
                           className="min-h-[40px] px-3.5 py-2 rounded-xl border border-slate-300 bg-white text-xs font-semibold text-slate-800 hover:bg-slate-50 transition-colors cursor-pointer inline-flex items-center gap-1.5 whitespace-nowrap"
                         >
-                          <Mail className="w-4 h-4 text-teal-900" />
+                          <Mail className="w-4 h-4 text-rose-600" />
                           <span>Avisar Grupo</span>
                         </button>
                       </div>
@@ -1220,7 +1241,7 @@ export default function App() {
                 type="button"
                 onClick={() => setMobileTab(tab.id)}
                 className={`h-full flex flex-col items-center justify-center gap-1 cursor-pointer transition-colors ${
-                  active ? 'text-teal-900' : 'text-slate-500 hover:text-slate-800'
+                  active ? 'text-rose-600' : 'text-slate-500 hover:text-slate-800'
                 }`}
               >
                 <Icon className="w-5 h-5" strokeWidth={active ? 2.4 : 1.8} />

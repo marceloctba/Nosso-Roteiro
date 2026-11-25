@@ -29,11 +29,13 @@ export const SyncNotifyModal: React.FC<SyncNotifyModalProps> = ({
   const [syncCalendar, setSyncCalendar] = useState(true);
   const [sendGmail, setSendGmail] = useState(true);
 
+  const canSyncCalendar = Boolean(event?.date && event?.time);
+
   useEffect(() => {
     if (!open) return;
-    setSyncCalendar(itinerary.calendarSyncEnabled);
+    setSyncCalendar(canSyncCalendar && itinerary.calendarSyncEnabled);
     setSendGmail(itinerary.notifyOnChanges);
-  }, [open, itinerary.calendarSyncEnabled, itinerary.notifyOnChanges]);
+  }, [open, canSyncCalendar, itinerary.calendarSyncEnabled, itinerary.notifyOnChanges]);
 
   if (!open || !event) return null;
 
@@ -56,14 +58,15 @@ export const SyncNotifyModal: React.FC<SyncNotifyModalProps> = ({
 
         <div className="flex items-start justify-between gap-4">
           <div>
-            <p className="text-xs font-semibold text-teal-900">
-              {isUpdate ? 'Compromisso atualizado' : 'Compromisso salvo no roteiro'}
+            <p className="text-xs font-semibold text-rose-600">
+              {isUpdate ? 'Atividade atualizada' : 'Atividade salva no roteiro'}
             </p>
             <h3 id="sync-notify-title" className="mt-1 font-display text-lg font-bold text-slate-900">
-              {formatDateShort(event.date)} · {event.title}
+              {event.date ? `${formatDateShort(event.date)} · ` : ''}
+              {event.title}
             </h3>
             <p className="mt-0.5 text-xs text-slate-500 font-mono tabular-nums">
-              Horário: {event.time}
+              Horário: {event.time || 'Em aberto'}
               {event.location ? ` · Local: ${event.location}` : ''}
             </p>
           </div>
@@ -79,16 +82,21 @@ export const SyncNotifyModal: React.FC<SyncNotifyModalProps> = ({
         </div>
 
         <div className="mt-5 space-y-3">
-          <label className="flex items-start gap-3 p-3.5 rounded-xl border border-slate-200 bg-slate-50/70 cursor-pointer hover:border-slate-300 transition-colors">
+          <label
+            className={`flex items-start gap-3 p-3.5 rounded-xl border border-slate-200 bg-slate-50/70 transition-colors ${
+              canSyncCalendar ? 'cursor-pointer hover:border-slate-300' : 'opacity-60 cursor-not-allowed'
+            }`}
+          >
             <input
               type="checkbox"
               checked={syncCalendar}
+              disabled={!canSyncCalendar}
               onChange={(e) => setSyncCalendar(e.target.checked)}
-              className="mt-0.5 h-4 w-4 rounded border-slate-300 text-teal-900 focus:ring-teal-900"
+              className="mt-0.5 h-4 w-4 rounded border-slate-300 accent-rose-600 text-rose-600 focus:ring-rose-600"
             />
             <div className="flex-1 min-w-0">
               <span className="text-sm font-semibold text-slate-900 flex items-center gap-1.5">
-                <CalendarCheck className="w-4 h-4 text-teal-900" />
+                <CalendarCheck className="w-4 h-4 text-rose-600" />
                 <span>
                   {event.googleCalendarEventId
                     ? 'Atualizar evento no Google Agenda'
@@ -96,8 +104,9 @@ export const SyncNotifyModal: React.FC<SyncNotifyModalProps> = ({
                 </span>
               </span>
               <span className="mt-1 block text-xs text-slate-600">
-                Cria ou atualiza na agenda principal convidando {itinerary.linkedEmails.length}{' '}
-                conta(s).
+                {canSyncCalendar
+                  ? `Cria ou atualiza na agenda principal convidando ${itinerary.linkedEmails.length} conta(s).`
+                  : 'Defina data e horário na atividade para marcar no Google Agenda.'}
               </span>
             </div>
           </label>
@@ -107,11 +116,11 @@ export const SyncNotifyModal: React.FC<SyncNotifyModalProps> = ({
               type="checkbox"
               checked={sendGmail}
               onChange={(e) => setSendGmail(e.target.checked)}
-              className="mt-0.5 h-4 w-4 rounded border-slate-300 text-teal-900 focus:ring-teal-900"
+              className="mt-0.5 h-4 w-4 rounded border-slate-300 accent-rose-600 text-rose-600 focus:ring-rose-600"
             />
             <div className="flex-1 min-w-0">
               <span className="text-sm font-semibold text-slate-900 flex items-center gap-1.5">
-                <Mail className="w-4 h-4 text-teal-900" />
+                <Mail className="w-4 h-4 text-rose-600" />
                 <span>Avisar participantes via Gmail</span>
               </span>
               <span className="mt-1 block text-xs text-slate-600 truncate">
@@ -141,7 +150,7 @@ export const SyncNotifyModal: React.FC<SyncNotifyModalProps> = ({
             type="button"
             disabled={isProcessing || (!syncCalendar && !sendGmail)}
             onClick={() => void onConfirm({ syncCalendar, sendGmail })}
-            className="min-h-[44px] px-5 py-2.5 rounded-xl bg-teal-900 text-sm font-semibold text-white hover:bg-teal-800 transition-colors cursor-pointer disabled:opacity-50"
+            className="min-h-[44px] px-5 py-2.5 rounded-xl bg-rose-600 text-sm font-semibold text-white hover:bg-rose-700 transition-colors cursor-pointer disabled:opacity-50"
           >
             {isProcessing ? 'Executando...' : 'Confirmar ações'}
           </button>

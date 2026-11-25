@@ -46,7 +46,7 @@ export const FilePreviewModal: React.FC<FilePreviewModalProps> = ({
               <a
                 href={file.dataUrl}
                 download={file.name}
-                className="min-h-[40px] px-3.5 py-2 rounded-xl bg-teal-900 text-xs font-semibold text-white hover:bg-teal-800 inline-flex items-center gap-1.5"
+                className="min-h-[40px] px-3.5 py-2 rounded-xl bg-rose-600 text-xs font-semibold text-white hover:bg-rose-700 inline-flex items-center gap-1.5"
               >
                 <Download className="w-4 h-4" />
                 <span>Baixar</span>

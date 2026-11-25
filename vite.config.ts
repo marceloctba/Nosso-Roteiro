@@ -18,7 +18,7 @@ export default defineConfig(() => {
           name: 'Nosso Roteiro',
           short_name: 'Roteiro',
           description: 'Agenda e roteiros compartilhados entre contas Gmail com Google Agenda e Gmail.',
-          theme_color: '#0F3D3E',
+          theme_color: '#E11D48',
           background_color: '#F8FAFC',
           display: 'standalone',
           start_url: '/',

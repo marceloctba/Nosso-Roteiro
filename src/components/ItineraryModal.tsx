@@ -172,7 +172,7 @@ export const ItineraryModal: React.FC<ItineraryModalProps> = ({
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Ex.: Natal, Feriado na Praia..."
-              className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-900/20 focus:border-teal-900"
+              className="w-full min-h-[44px] px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-rose-600/20 focus:border-rose-600"
             />
           </div>
 
@@ -207,7 +207,7 @@ export const ItineraryModal: React.FC<ItineraryModalProps> = ({
                 disabled={isProcessingCover || isSubmitting}
                 className="min-h-[40px] px-3.5 py-2 rounded-xl border border-slate-300 bg-white text-xs font-semibold text-slate-800 hover:bg-slate-50 transition-colors cursor-pointer inline-flex items-center gap-1.5"
               >
-                <ImagePlus className="w-4 h-4 text-teal-900" />
+                <ImagePlus className="w-4 h-4 text-rose-600" />
                 <span>
                   {isProcessingCover
                     ? 'Processando...'
@@ -247,7 +247,7 @@ export const ItineraryModal: React.FC<ItineraryModalProps> = ({
                     }
                   }}
                   placeholder="exemplo@gmail.com"
-                  className="flex-1 min-h-[44px] px-3.5 py-2 rounded-xl border border-slate-300 bg-white text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-900/20 focus:border-teal-900"
+                  className="flex-1 min-h-[44px] px-3.5 py-2 rounded-xl border border-slate-300 bg-white text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-rose-600/20 focus:border-rose-600"
                 />
                 <button
                   type="button"
@@ -292,7 +292,7 @@ export const ItineraryModal: React.FC<ItineraryModalProps> = ({
                 type="checkbox"
                 checked={calendarSyncEnabled}
                 onChange={(e) => setCalendarSyncEnabled(e.target.checked)}
-                className="mt-0.5 h-4 w-4 rounded border-slate-300 text-teal-900 focus:ring-teal-900"
+                className="mt-0.5 h-4 w-4 rounded border-slate-300 text-rose-600 accent-rose-600 focus:ring-rose-600"
               />
               <span className="text-xs text-slate-700 leading-relaxed">
                 <strong className="font-semibold text-slate-900 block">
@@ -307,7 +307,7 @@ export const ItineraryModal: React.FC<ItineraryModalProps> = ({
                 type="checkbox"
                 checked={notifyOnChanges}
                 onChange={(e) => setNotifyOnChanges(e.target.checked)}
-                className="mt-0.5 h-4 w-4 rounded border-slate-300 text-teal-900 focus:ring-teal-900"
+                className="mt-0.5 h-4 w-4 rounded border-slate-300 text-rose-600 accent-rose-600 focus:ring-rose-600"
               />
               <span className="text-xs text-slate-700 leading-relaxed">
                 <strong className="font-semibold text-slate-900 block">
@@ -337,7 +337,7 @@ export const ItineraryModal: React.FC<ItineraryModalProps> = ({
             <button
               type="submit"
               disabled={isSubmitting || isProcessingCover}
-              className="min-h-[44px] px-5 py-2.5 rounded-xl bg-teal-900 text-sm font-semibold text-white hover:bg-teal-800 transition-colors cursor-pointer disabled:opacity-60"
+              className="min-h-[44px] px-5 py-2.5 rounded-xl bg-rose-600 text-sm font-semibold text-white hover:bg-rose-700 transition-colors cursor-pointer disabled:opacity-60"
             >
               {isSubmitting
                 ? 'Salvando...'

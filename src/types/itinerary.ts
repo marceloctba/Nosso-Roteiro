@@ -83,8 +83,8 @@ export interface ItineraryEvent {
   id: string;
   itineraryId: string;
   title: string;
-  date: string; // YYYY-MM-DD
-  time: string; // HH:MM
+  date: string; // YYYY-MM-DD or ""
+  time: string; // HH:MM or ""
   endTime: string; // HH:MM or ""
   location: string;
   links: EventLink[];

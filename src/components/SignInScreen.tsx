@@ -26,7 +26,7 @@ export const SignInScreen: React.FC<SignInScreenProps> = ({
 
       <main className="flex-1 w-full max-w-3xl mx-auto px-6 py-10 sm:py-16 flex flex-col justify-center">
         <div>
-          <p className="text-xs font-semibold text-teal-900 tracking-wide">
+          <p className="text-xs font-semibold text-rose-600 tracking-wide">
             Agenda compartilhada · Web e celular
           </p>
           <h1 className="mt-3 font-display text-3xl sm:text-5xl font-bold tracking-tight text-slate-900 leading-[1.12] text-balance">
@@ -83,7 +83,7 @@ export const SignInScreen: React.FC<SignInScreenProps> = ({
 
           <div className="mt-12 pt-8 border-t border-slate-200 grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div className="flex items-start gap-3">
-              <Users className="w-5 h-5 text-teal-900 shrink-0 mt-0.5" />
+              <Users className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
               <div>
                 <h2 className="text-sm font-semibold text-slate-900">Edição colaborativa</h2>
                 <p className="mt-0.5 text-xs text-slate-600 leading-relaxed">
@@ -92,7 +92,7 @@ export const SignInScreen: React.FC<SignInScreenProps> = ({
               </div>
             </div>
             <div className="flex items-start gap-3">
-              <Calendar className="w-5 h-5 text-teal-900 shrink-0 mt-0.5" />
+              <Calendar className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
               <div>
                 <h2 className="text-sm font-semibold text-slate-900">Google Agenda integrado</h2>
                 <p className="mt-0.5 text-xs text-slate-600 leading-relaxed">
@@ -101,7 +101,7 @@ export const SignInScreen: React.FC<SignInScreenProps> = ({
               </div>
             </div>
             <div className="flex items-start gap-3">
-              <Mail className="w-5 h-5 text-teal-900 shrink-0 mt-0.5" />
+              <Mail className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
               <div>
                 <h2 className="text-sm font-semibold text-slate-900">Avisos pelo Gmail</h2>
                 <p className="mt-0.5 text-xs text-slate-600 leading-relaxed">
@@ -110,7 +110,7 @@ export const SignInScreen: React.FC<SignInScreenProps> = ({
               </div>
             </div>
             <div className="flex items-start gap-3">
-              <Smartphone className="w-5 h-5 text-teal-900 shrink-0 mt-0.5" />
+              <Smartphone className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
               <div>
                 <h2 className="text-sm font-semibold text-slate-900">Instalável no celular</h2>
                 <p className="mt-0.5 text-xs text-slate-600 leading-relaxed">

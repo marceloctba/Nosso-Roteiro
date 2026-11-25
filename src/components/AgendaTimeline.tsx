@@ -73,16 +73,21 @@ export const AgendaTimeline: React.FC<AgendaTimelineProps> = ({
   const groupedByDate = useMemo(() => {
     const groups = new Map<string, ItineraryEvent[]>();
     for (const ev of filteredEvents) {
-      const existing = groups.get(ev.date) ?? [];
+      const key = ev.date || '';
+      const existing = groups.get(key) ?? [];
       existing.push(ev);
-      groups.set(ev.date, existing);
+      groups.set(key, existing);
     }
-    return Array.from(groups.entries()).sort(([a], [b]) => a.localeCompare(b));
+    return Array.from(groups.entries()).sort(([a], [b]) => {
+      if (!a && b) return 1;
+      if (a && !b) return -1;
+      return a.localeCompare(b);
+    });
   }, [filteredEvents]);
 
   return (
     <div className="space-y-5">
-      {/* Toolbar: Search + Segmented Status Filter + Nova data */}
+      {/* Toolbar: Search + Segmented Status Filter + Nova atividade */}
       <div className="bg-white border border-slate-200 rounded-2xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-3">
         <div className="relative flex-1 min-w-0">
           <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -91,7 +96,7 @@ export const AgendaTimeline: React.FC<AgendaTimelineProps> = ({
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Buscar atividade, local, link ou arquivo..."
-            className="w-full min-h-[42px] pl-10 pr-3.5 py-2 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-900/20 focus:border-teal-900"
+            className="w-full min-h-[42px] pl-10 pr-3.5 py-2 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-rose-600/20 focus:border-rose-600"
           />
         </div>
 
@@ -122,10 +127,10 @@ export const AgendaTimeline: React.FC<AgendaTimelineProps> = ({
           <button
             type="button"
             onClick={onAddEvent}
-            className="min-h-[42px] px-4 py-2 rounded-xl bg-teal-900 text-xs font-semibold text-white hover:bg-teal-800 transition-colors cursor-pointer inline-flex items-center gap-1.5 whitespace-nowrap shrink-0"
+            className="min-h-[42px] px-4 py-2 rounded-xl bg-rose-600 text-xs font-semibold text-white hover:bg-rose-700 transition-colors cursor-pointer inline-flex items-center gap-1.5 whitespace-nowrap shrink-0"
           >
             <Plus className="w-4 h-4" />
-            <span>Nova data</span>
+            <span>Nova atividade</span>
           </button>
         </div>
       </div>
@@ -133,27 +138,27 @@ export const AgendaTimeline: React.FC<AgendaTimelineProps> = ({
       {/* Empty State */}
       {events.length === 0 ? (
         <div className="bg-white border border-slate-200 rounded-2xl p-8 sm:p-12 text-center">
-          <CalendarPlus className="w-10 h-10 text-slate-300 mx-auto" />
+          <CalendarPlus className="w-10 h-10 text-rose-200 mx-auto" />
           <h3 className="mt-4 font-display text-lg font-bold text-slate-900">
-            Nenhuma data cadastrada em {itinerary.title}
+            Nenhuma atividade cadastrada em {itinerary.title}
           </h3>
           <p className="mt-1.5 text-sm text-slate-600 max-w-md mx-auto leading-relaxed">
-            Adicione a primeira data com horário, local no mapa, links ou arquivos. Todos os
-            participantes poderão acompanhar e editar juntos.
+            Adicione a primeira atividade com data e horário ou deixe em aberto para montar uma
+            lista de locais para conhecer juntos.
           </p>
           <button
             type="button"
             onClick={onAddEvent}
-            className="mt-6 min-h-[44px] px-5 py-2.5 rounded-xl bg-teal-900 text-sm font-semibold text-white hover:bg-teal-800 transition-colors cursor-pointer inline-flex items-center gap-2"
+            className="mt-6 min-h-[44px] px-5 py-2.5 rounded-xl bg-rose-600 text-sm font-semibold text-white hover:bg-rose-700 transition-colors cursor-pointer inline-flex items-center gap-2"
           >
             <Plus className="w-4 h-4" />
-            <span>Nova data</span>
+            <span>Nova atividade</span>
           </button>
         </div>
       ) : groupedByDate.length === 0 ? (
         <div className="bg-white border border-slate-200 rounded-2xl p-8 text-center">
           <p className="text-sm font-medium text-slate-700">
-            Nenhum compromisso corresponde ao filtro atual.
+            Nenhuma atividade corresponde ao filtro atual.
           </p>
           <button
             type="button"
@@ -161,7 +166,7 @@ export const AgendaTimeline: React.FC<AgendaTimelineProps> = ({
               setSearchQuery('');
               setStatusFilter('todos');
             }}
-            className="mt-3 text-xs font-semibold text-teal-900 hover:underline cursor-pointer"
+            className="mt-3 text-xs font-semibold text-rose-600 hover:underline cursor-pointer"
           >
             Limpar filtros
           </button>
@@ -171,10 +176,10 @@ export const AgendaTimeline: React.FC<AgendaTimelineProps> = ({
           {groupedByDate.map(([dateStr, dayEvents]) => {
             const heading = formatDateHeading(dateStr);
             return (
-              <section key={dateStr} className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
+              <section key={dateStr || 'em-aberto'} className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
                 <div className="px-5 py-3.5 bg-slate-50/80 border-b border-slate-200 flex items-baseline justify-between gap-4">
                   <div className="flex items-baseline gap-2.5">
-                    <span className="font-mono tabular-nums text-base font-bold text-teal-900">
+                    <span className="font-mono tabular-nums text-base font-bold text-rose-600">
                       {heading.dayMonth}
                     </span>
                     <span className="text-sm font-semibold text-slate-900">{heading.weekday}</span>
@@ -190,6 +195,7 @@ export const AgendaTimeline: React.FC<AgendaTimelineProps> = ({
                     const past = isEventPast(ev, now);
                     const isDone = ev.status === 'concluido' || past;
                     const isSynced = Boolean(ev.googleCalendarEventId);
+                    const canSyncCalendar = Boolean(ev.date && ev.time);
                     const mapsUrl = ev.location
                       ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
                           ev.location
@@ -210,7 +216,7 @@ export const AgendaTimeline: React.FC<AgendaTimelineProps> = ({
                                     ? 'Marcar como planejado'
                                     : 'Marcar como concluído'
                               }
-                              className="min-h-[44px] min-w-[44px] -ml-2 -mt-2 flex items-center justify-center rounded-xl text-slate-400 hover:text-teal-900 hover:bg-slate-100 transition-colors cursor-pointer shrink-0"
+                              className="min-h-[44px] min-w-[44px] -ml-2 -mt-2 flex items-center justify-center rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer shrink-0"
                               aria-label={
                                 past
                                   ? 'Evento concluído pela data passada'
@@ -220,7 +226,7 @@ export const AgendaTimeline: React.FC<AgendaTimelineProps> = ({
                               }
                             >
                               {isDone ? (
-                                <CheckCircle2 className="w-5 h-5 text-teal-800" />
+                                <CheckCircle2 className="w-5 h-5 text-rose-600" />
                               ) : (
                                 <Circle className="w-5 h-5" />
                               )}
@@ -228,10 +234,16 @@ export const AgendaTimeline: React.FC<AgendaTimelineProps> = ({
 
                             <div className="min-w-0 flex-1">
                               <div className="flex flex-wrap items-baseline gap-x-2.5 gap-y-1">
-                                <span className="font-mono tabular-nums text-sm font-bold text-slate-900">
-                                  {ev.time}
-                                  {ev.endTime ? ` – ${ev.endTime}` : ''}
-                                </span>
+                                {ev.time ? (
+                                  <span className="font-mono tabular-nums text-sm font-bold text-slate-900">
+                                    {ev.time}
+                                    {ev.endTime ? ` – ${ev.endTime}` : ''}
+                                  </span>
+                                ) : (
+                                  <span className="text-xs font-medium text-slate-500">
+                                    Horário em aberto
+                                  </span>
+                                )}
                                 <h4
                                   className={`font-display text-base font-bold text-slate-900 ${
                                     isDone ? 'line-through text-slate-400' : ''
@@ -250,7 +262,7 @@ export const AgendaTimeline: React.FC<AgendaTimelineProps> = ({
                                       href={mapsUrl}
                                       target="_blank"
                                       rel="noopener noreferrer"
-                                      className="inline-flex items-center gap-1 text-xs font-semibold text-teal-900 hover:underline shrink-0"
+                                      className="inline-flex items-center gap-1 text-xs font-semibold text-rose-600 hover:underline shrink-0"
                                     >
                                       <span>Mapa</span>
                                       <ExternalLink className="w-3 h-3" />
@@ -268,7 +280,7 @@ export const AgendaTimeline: React.FC<AgendaTimelineProps> = ({
                                         href={link.url}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="font-medium text-teal-900 hover:underline truncate inline-flex items-center gap-1"
+                                        className="font-medium text-rose-600 hover:underline truncate inline-flex items-center gap-1"
                                       >
                                         <span className="truncate">{link.label || link.url}</span>
                                         <ExternalLink className="w-3 h-3 shrink-0" />
@@ -290,9 +302,9 @@ export const AgendaTimeline: React.FC<AgendaTimelineProps> = ({
                                           className="min-h-[36px] px-3 py-1.5 rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 text-xs font-medium text-slate-800 inline-flex items-center gap-1.5 cursor-pointer transition-colors"
                                         >
                                           {isPdf ? (
-                                            <FileText className="w-3.5 h-3.5 text-teal-900 shrink-0" />
+                                            <FileText className="w-3.5 h-3.5 text-rose-600 shrink-0" />
                                           ) : (
-                                            <ImageIcon className="w-3.5 h-3.5 text-teal-900 shrink-0" />
+                                            <ImageIcon className="w-3.5 h-3.5 text-rose-600 shrink-0" />
                                           )}
                                           <span className="truncate max-w-[180px]">{att.name}</span>
                                           <span className="text-[11px] text-slate-400 font-mono tabular-nums">
@@ -313,18 +325,20 @@ export const AgendaTimeline: React.FC<AgendaTimelineProps> = ({
 
                           {/* Action Controls */}
                           <div className="flex flex-wrap items-center gap-1.5 sm:shrink-0 pl-8 sm:pl-0">
-                            <button
-                              type="button"
-                              onClick={() => onSyncCalendar(ev)}
-                              className={`min-h-[40px] px-3 py-1.5 rounded-xl border text-xs font-semibold transition-colors cursor-pointer inline-flex items-center gap-1.5 whitespace-nowrap ${
-                                isSynced
-                                  ? 'border-teal-900/25 bg-teal-50/70 text-teal-950 hover:bg-teal-100/70'
-                                  : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50'
-                              }`}
-                            >
-                              <CalendarCheck className="w-3.5 h-3.5" />
-                              <span>{isSynced ? 'Atualizar Agenda' : 'Marcar na Agenda'}</span>
-                            </button>
+                            {canSyncCalendar && (
+                              <button
+                                type="button"
+                                onClick={() => onSyncCalendar(ev)}
+                                className={`min-h-[40px] px-3 py-1.5 rounded-xl border text-xs font-semibold transition-colors cursor-pointer inline-flex items-center gap-1.5 whitespace-nowrap ${
+                                  isSynced
+                                    ? 'border-rose-600/25 bg-rose-50/80 text-rose-800 hover:bg-rose-100/80'
+                                    : 'border-slate-300 bg-white text-slate-700 hover:bg-slate-50'
+                                }`}
+                              >
+                                <CalendarCheck className="w-3.5 h-3.5" />
+                                <span>{isSynced ? 'Atualizar Agenda' : 'Marcar na Agenda'}</span>
+                              </button>
+                            )}
 
                             <button
                               type="button"

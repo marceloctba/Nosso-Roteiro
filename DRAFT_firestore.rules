@@ -190,11 +190,9 @@ service cloud.firestore {
         && data.title.size() >= 1
         && data.title.size() <= 160
         && data.date is string
-        && data.date.size() == 10
-        && data.date.matches('^\\d{4}-\\d{2}-\\d{2}$')
+        && (data.date.size() == 0 || (data.date.size() == 10 && data.date.matches('^\\d{4}-\\d{2}-\\d{2}$')))
         && data.time is string
-        && data.time.size() == 5
-        && data.time.matches('^\\d{2}:\\d{2}$')
+        && (data.time.size() == 0 || (data.time.size() == 5 && data.time.matches('^\\d{2}:\\d{2}$')))
         && data.endTime is string
         && (data.endTime.size() == 0 || (data.endTime.size() == 5 && data.endTime.matches('^\\d{2}:\\d{2}$')))
         && data.location is string

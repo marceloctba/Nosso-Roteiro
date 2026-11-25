@@ -45,13 +45,13 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
     tone === 'danger'
       ? 'bg-red-50 text-red-700'
       : tone === 'workspace'
-        ? 'bg-teal-50 text-teal-900'
+        ? 'bg-rose-50 text-rose-600'
         : 'bg-slate-100 text-slate-800';
 
   const confirmClasses =
     tone === 'danger'
       ? 'bg-red-600 hover:bg-red-700 text-white'
-      : 'bg-teal-900 hover:bg-teal-800 text-white';
+      : 'bg-rose-600 hover:bg-rose-700 text-white';
 
   return (
     <div

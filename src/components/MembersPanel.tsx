@@ -55,7 +55,7 @@ export const MembersPanel: React.FC<MembersPanelProps> = ({
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-5 border-b border-slate-200">
         <div>
           <h3 className="font-display text-base font-bold text-slate-900 flex items-center gap-2">
-            <Users className="w-4 h-4 text-teal-900" />
+            <Users className="w-4 h-4 text-rose-600" />
             <span>Contas Gmail vinculadas</span>
           </h3>
           <p className="mt-1 text-xs text-slate-600 leading-relaxed">
@@ -68,7 +68,7 @@ export const MembersPanel: React.FC<MembersPanelProps> = ({
           onClick={onSendDigestEmail}
           className="min-h-[44px] px-4 py-2 rounded-xl border border-slate-300 bg-white text-xs font-semibold text-slate-800 hover:bg-slate-50 transition-colors cursor-pointer inline-flex items-center justify-center gap-2 whitespace-nowrap shrink-0"
         >
-          <Mail className="w-4 h-4 text-teal-900" />
+          <Mail className="w-4 h-4 text-rose-600" />
           <span>Enviar resumo por Gmail</span>
         </button>
       </div>
@@ -80,12 +80,12 @@ export const MembersPanel: React.FC<MembersPanelProps> = ({
           onChange={(e) => setEmailInput(e.target.value)}
           placeholder="Adicionar conta Gmail (ex.: amigo@gmail.com)"
           disabled={isUpdating}
-          className="flex-1 min-h-[44px] px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-900/20 focus:border-teal-900"
+          className="flex-1 min-h-[44px] px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-rose-600/20 focus:border-rose-600"
         />
         <button
           type="submit"
           disabled={isUpdating}
-          className="min-h-[44px] px-5 py-2.5 rounded-xl bg-teal-900 text-xs font-semibold text-white hover:bg-teal-800 transition-colors cursor-pointer disabled:opacity-60 inline-flex items-center justify-center gap-2 whitespace-nowrap shrink-0"
+          className="min-h-[44px] px-5 py-2.5 rounded-xl bg-rose-600 text-xs font-semibold text-white hover:bg-rose-700 transition-colors cursor-pointer disabled:opacity-60 inline-flex items-center justify-center gap-2 whitespace-nowrap shrink-0"
         >
           <Plus className="w-4 h-4" />
           <span>{isUpdating ? 'Vinculando...' : 'Vincular conta'}</span>

@@ -182,7 +182,7 @@ export function subscribeEvents(
           itineraryId: raw.itineraryId || itineraryId,
           title: raw.title || '',
           date: raw.date || '',
-          time: raw.time || '00:00',
+          time: raw.time || '',
           endTime: raw.endTime || '',
           location: raw.location || '',
           links: Array.isArray(raw.links) ? raw.links : [],
@@ -198,7 +198,13 @@ export function subscribeEvents(
           updatedAt: raw.updatedAt,
         };
       });
-      list.sort((a, b) => `${a.date}T${a.time}`.localeCompare(`${b.date}T${b.time}`));
+      list.sort((a, b) => {
+        if (!a.date && b.date) return 1;
+        if (a.date && !b.date) return -1;
+        const da = `${a.date || '9999-99-99'}T${a.time || '99:99'}`;
+        const dbKey = `${b.date || '9999-99-99'}T${b.time || '99:99'}`;
+        return da.localeCompare(dbKey) || a.title.localeCompare(b.title);
+      });
       onData(list);
     },
     (error) => {
@@ -515,26 +521,41 @@ export async function deleteItineraryFile(itineraryId: string, fileId: string): 
 function validateEventInput(input: EventFormInput) {
   const title = sanitizeString(input.title, BLUEPRINT_LIMITS.EVENT_TITLE_MAX);
   if (!title) throw new Error('Informe o nome da atividade.');
-  if (!BLUEPRINT_LIMITS.DATE_PATTERN.test(input.date)) {
+  const date = input.date.trim();
+  if (date && !BLUEPRINT_LIMITS.DATE_PATTERN.test(date)) {
     throw new Error('Data inválida. Use o formato AAAA-MM-DD.');
   }
-  if (!BLUEPRINT_LIMITS.TIME_PATTERN.test(input.time)) {
+  const time = input.time.trim();
+  if (time && !BLUEPRINT_LIMITS.TIME_PATTERN.test(time)) {
     throw new Error('Horário inválido. Use o formato HH:MM.');
   }
-  const endTime = input.endTime.trim();
+  const endTime = time ? input.endTime.trim() : '';
   if (endTime && !BLUEPRINT_LIMITS.TIME_PATTERN.test(endTime)) {
     throw new Error('Horário de término inválido.');
   }
   return {
     title,
-    date: input.date,
-    time: input.time,
+    date,
+    time,
     endTime,
     location: sanitizeString(input.location, BLUEPRINT_LIMITS.LOCATION_MAX),
     links: sanitizeLinks(input.links),
     attachments: sanitizeAttachments(input.attachments),
     status: input.status === 'concluido' ? ('concluido' as const) : ('planejado' as const),
   };
+}
+
+function formatEventWhenSummary(date: string, time: string): string {
+  if (date && time) {
+    return `em ${date.split('-').reverse().slice(0, 2).join('/')} às ${time}`;
+  }
+  if (date) {
+    return `em ${date.split('-').reverse().slice(0, 2).join('/')} (horário em aberto)`;
+  }
+  if (time) {
+    return `às ${time} (data em aberto)`;
+  }
+  return '(data e horário em aberto)';
 }
 
 export async function createItineraryEvent(
@@ -569,7 +590,7 @@ export async function createItineraryEvent(
       itineraryId: itinerary.id,
       action: 'created_event' as ActivityAction,
       summary: sanitizeString(
-        `Adicionou "${clean.title}" em ${clean.date.split('-').reverse().slice(0, 2).join('/')} às ${clean.time}.`,
+        `Adicionou "${clean.title}" ${formatEventWhenSummary(clean.date, clean.time)}.`,
         BLUEPRINT_LIMITS.SUMMARY_MAX
       ),
       actorEmail,
@@ -618,7 +639,9 @@ export async function updateItineraryEvent(
       itineraryId: itinerary.id,
       action: 'updated_event' as ActivityAction,
       summary: sanitizeString(
-        `Alterou "${clean.title}" (${clean.date.split('-').reverse().slice(0, 2).join('/')} · ${clean.time}).`,
+        `Alterou "${clean.title}" (${
+          clean.date ? clean.date.split('-').reverse().slice(0, 2).join('/') : 'Data em aberto'
+        } · ${clean.time || 'Horário em aberto'}).`,
         BLUEPRINT_LIMITS.SUMMARY_MAX
       ),
       actorEmail,

@@ -32,6 +32,9 @@ export async function syncEventToGoogleCalendar(
   itinerary: Itinerary,
   event: ItineraryEvent
 ): Promise<CalendarSyncResult> {
+  if (!event.date || !event.time) {
+    throw new Error('Defina uma data e um horário antes de sincronizar com o Google Agenda.');
+  }
   const timeZone = getTimeZone();
   const startDateTime = buildIsoOffsetDateTime(event.date, event.time);
   const endTimeStr = event.endTime || addMinutesToTime(event.time, 90);
@@ -196,11 +199,15 @@ export async function sendItineraryNotificationEmail(
     throw new Error('Nenhum destinatário selecionado para o aviso por Gmail.');
   }
 
-  let subject = `[Nosso Roteiro · ${itinerary.title}] Atualização da agenda`;
+  let subject = `[Nosso Roteiro · ${itinerary.title}] Atualização do roteiro`;
   if (changeType === 'created' && event) {
-    subject = `[Nosso Roteiro · ${itinerary.title}] Nova data: ${event.title} (${formatDateShort(event.date)})`;
+    subject = `[Nosso Roteiro · ${itinerary.title}] Nova atividade: ${event.title}${
+      event.date ? ` (${formatDateShort(event.date)})` : ''
+    }`;
   } else if (changeType === 'updated' && event) {
-    subject = `[Nosso Roteiro · ${itinerary.title}] Data alterada: ${event.title} (${formatDateShort(event.date)})`;
+    subject = `[Nosso Roteiro · ${itinerary.title}] Atividade alterada: ${event.title}${
+      event.date ? ` (${formatDateShort(event.date)})` : ''
+    }`;
   } else if (changeType === 'digest') {
     subject = `[Nosso Roteiro · ${itinerary.title}] Resumo atualizado do roteiro`;
   }
@@ -210,18 +217,24 @@ export async function sendItineraryNotificationEmail(
   let bodyInnerHtml = '';
   if (event && (changeType === 'created' || changeType === 'updated')) {
     const label =
-      changeType === 'created' ? 'Nova data incluída no roteiro' : 'Data atualizada no roteiro';
+      changeType === 'created'
+        ? 'Nova atividade incluída no roteiro'
+        : 'Atividade atualizada no roteiro';
     const linksHtml = (event.links || [])
       .map(
         (l) =>
           `<p style="margin:4px 0 0;font-size:13px;"><a href="${escapeHtml(
             l.url
-          )}" style="color:#0F3D3E;">${escapeHtml(l.label || l.url)}</a></p>`
+          )}" style="color:#E11D48;">${escapeHtml(l.label || l.url)}</a></p>`
       )
       .join('');
 
+    const timeDisplay = event.time
+      ? `${escapeHtml(event.time)}${event.endTime ? ` – ${escapeHtml(event.endTime)}` : ''}`
+      : 'Em aberto';
+
     bodyInnerHtml = `
-      <p style="margin:0 0 12px;font-size:13px;font-weight:600;color:#0F3D3E;">${escapeHtml(label)}</p>
+      <p style="margin:0 0 12px;font-size:13px;font-weight:600;color:#E11D48;">${escapeHtml(label)}</p>
       <div style="border:1px solid #E2E8F0;border-radius:12px;padding:16px;background:#F8FAFC;">
         <p style="margin:0 0 6px;font-size:18px;font-weight:700;color:#0F172A;">
           ${escapeHtml(formatDateShort(event.date))}: ${escapeHtml(event.title)}
@@ -230,7 +243,7 @@ export async function sendItineraryNotificationEmail(
           <strong>Data:</strong> ${escapeHtml(formatDateWithYear(event.date))}
         </p>
         <p style="margin:0 0 4px;font-size:14px;color:#334155;">
-          <strong>Horário:</strong> ${escapeHtml(event.time)}${event.endTime ? ` – ${escapeHtml(event.endTime)}` : ''}
+          <strong>Horário:</strong> ${timeDisplay}
         </p>
         ${
           event.location
@@ -241,15 +254,19 @@ export async function sendItineraryNotificationEmail(
       </div>
     `;
   } else {
-    const sorted = [...(allEvents || [])].sort((a, b) =>
-      `${a.date}T${a.time}`.localeCompare(`${b.date}T${b.time}`)
-    );
+    const sorted = [...(allEvents || [])].sort((a, b) => {
+      if (!a.date && b.date) return 1;
+      if (a.date && !b.date) return -1;
+      return `${a.date || '9999-99-99'}T${a.time || '99:99'}`.localeCompare(
+        `${b.date || '9999-99-99'}T${b.time || '99:99'}`
+      );
+    });
     const itemsHtml = sorted
       .map(
         (ev) => `
         <li style="margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid #E2E8F0;">
           <strong style="color:#0F172A;">${escapeHtml(formatDateShort(ev.date))}: ${escapeHtml(ev.title)}</strong><br/>
-          <span style="font-size:13px;color:#475569;">Horário: ${escapeHtml(ev.time)}${
+          <span style="font-size:13px;color:#475569;">Horário: ${escapeHtml(ev.time || 'Em aberto')}${
             ev.location ? ` · Local: ${escapeHtml(ev.location)}` : ''
           }</span>
         </li>`
@@ -257,8 +274,8 @@ export async function sendItineraryNotificationEmail(
       .join('');
 
     bodyInnerHtml = `
-      <p style="margin:0 0 12px;font-size:13px;font-weight:600;color:#0F3D3E;">Resumo completo da agenda</p>
-      <ul style="list-style:none;padding:0;margin:0;">${itemsHtml || '<li>Nenhuma data cadastrada ainda.</li>'}</ul>
+      <p style="margin:0 0 12px;font-size:13px;font-weight:600;color:#E11D48;">Resumo completo do roteiro</p>
+      <ul style="list-style:none;padding:0;margin:0;">${itemsHtml || '<li>Nenhuma atividade cadastrada ainda.</li>'}</ul>
     `;
   }
 
@@ -271,7 +288,7 @@ export async function sendItineraryNotificationEmail(
         Atualizado por ${escapeHtml(senderEmail)} · Participantes: ${escapeHtml(itinerary.linkedEmails.join(', '))}
       </p>
       <p style="margin:14px 0 0;">
-        <a href="${escapeHtml(appUrl)}" style="display:inline-block;background:#0F3D3E;color:#FFFFFF;text-decoration:none;padding:10px 18px;border-radius:8px;font-size:13px;font-weight:600;">
+        <a href="${escapeHtml(appUrl)}" style="display:inline-block;background:#E11D48;color:#FFFFFF;text-decoration:none;padding:10px 18px;border-radius:8px;font-size:13px;font-weight:600;">
           Abrir Nosso Roteiro
         </a>
       </p>

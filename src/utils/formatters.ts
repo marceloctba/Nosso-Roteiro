@@ -31,12 +31,14 @@ export function parseLocalDate(yyyyMmDd: string): Date {
 }
 
 export function formatDateShort(yyyyMmDd: string): string {
+  if (!yyyyMmDd) return 'Em aberto';
   const parts = yyyyMmDd.split('-');
   if (parts.length !== 3) return yyyyMmDd;
   return `${parts[2]}/${parts[1]}`;
 }
 
 export function formatDateWithYear(yyyyMmDd: string): string {
+  if (!yyyyMmDd) return 'Data em aberto';
   const parts = yyyyMmDd.split('-');
   if (parts.length !== 3) return yyyyMmDd;
   return `${parts[2]}/${parts[1]}/${parts[0]}`;
@@ -47,6 +49,13 @@ export function formatDateHeading(yyyyMmDd: string): {
   weekday: string;
   monthLabel: string;
 } {
+  if (!yyyyMmDd) {
+    return {
+      dayMonth: 'Em aberto',
+      weekday: 'Sem data definida',
+      monthLabel: 'Locais e ideias',
+    };
+  }
   const dt = parseLocalDate(yyyyMmDd);
   const parts = yyyyMmDd.split('-');
   return {
