@@ -54,7 +54,7 @@ export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({ variant = 'h
             aria-modal="true"
             aria-labelledby="ios-install-title"
           >
-            <div className="w-full sm:max-w-sm rounded-t-3xl sm:rounded-2xl bg-white p-6 shadow-xl border border-slate-200 pb-safe">
+            <div className="w-full sm:max-w-sm rounded-t-3xl sm:rounded-2xl bg-white p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))] sm:p-6 shadow-xl border border-slate-200">
               <div className="w-10 h-1.5 bg-slate-200 rounded-full mx-auto mb-4 sm:hidden" />
               <div className="flex items-center justify-between gap-4">
                 <h3 id="ios-install-title" className="text-lg font-bold text-slate-900">

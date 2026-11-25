@@ -53,7 +53,7 @@ export const SyncNotifyModal: React.FC<SyncNotifyModalProps> = ({
       aria-modal="true"
       aria-labelledby="sync-notify-title"
     >
-      <div className="w-full sm:max-w-md bg-white rounded-t-3xl sm:rounded-2xl border border-slate-200 shadow-xl p-6 pb-safe">
+      <div className="w-full sm:max-w-md bg-white rounded-t-3xl sm:rounded-2xl border border-slate-200 shadow-xl p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))] sm:p-6">
         <div className="w-10 h-1.5 bg-slate-200 rounded-full mx-auto mb-4 sm:hidden" />
 
         <div className="flex items-start justify-between gap-4">
