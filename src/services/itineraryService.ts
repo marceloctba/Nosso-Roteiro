@@ -217,6 +217,48 @@ export function subscribeEvents(
   );
 }
 
+export function subscribeTodayEventCounts(
+  itineraryIds: string[],
+  userEmail: string,
+  todayYmd: string,
+  onData: (counts: Record<string, number>) => void
+): () => void {
+  const emailLower = normalizeEmail(userEmail);
+  if (itineraryIds.length === 0 || !emailLower) {
+    onData({});
+    return () => {};
+  }
+
+  const countsMap: Record<string, number> = {};
+  const unsubs = itineraryIds.map((itineraryId) => {
+    const q = query(
+      collection(db, 'itineraries', itineraryId, 'events'),
+      where('linkedEmails', 'array-contains', emailLower)
+    );
+    return onSnapshot(
+      q,
+      (snapshot) => {
+        let count = 0;
+        snapshot.docs.forEach((d) => {
+          const data = d.data() as { date?: string };
+          if (data.date === todayYmd) {
+            count++;
+          }
+        });
+        countsMap[itineraryId] = count;
+        onData({ ...countsMap });
+      },
+      (err) => {
+        console.warn(`Today events count listener error for ${itineraryId}:`, err);
+      }
+    );
+  });
+
+  return () => {
+    unsubs.forEach((unsub) => unsub());
+  };
+}
+
 export function subscribeActivities(
   itineraryId: string,
   userEmail: string,

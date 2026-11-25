@@ -51,6 +51,7 @@ import {
   subscribeActivities,
   subscribeEvents,
   subscribeItineraries,
+  subscribeTodayEventCounts,
   updateItineraryDetails,
   updateItineraryEvent,
   updateItineraryLinkedEmails,
@@ -65,7 +66,7 @@ import {
   ItineraryFileDoc,
   ItineraryFormInput,
 } from './types/itinerary';
-import { formatDateShort, isEventPast } from './utils/formatters';
+import { formatDateShort, getTodayLocalYmd, isEventPast } from './utils/formatters';
 
 type WorkspaceTab = 'agenda' | 'grupo' | 'historico' | 'integracoes';
 type MobileTab = 'roteiros' | 'agenda' | 'grupo' | 'conta';
@@ -95,9 +96,11 @@ export default function App() {
 
   const [events, setEvents] = useState<ItineraryEvent[]>([]);
   const [activities, setActivities] = useState<ItineraryActivity[]>([]);
+  const [todayYmd, setTodayYmd] = useState<string>(() => getTodayLocalYmd());
+  const [todayEventCounts, setTodayEventCounts] = useState<Record<string, number>>({});
 
   const [desktopTab, setDesktopTab] = useState<WorkspaceTab>('agenda');
-  const [mobileTab, setMobileTab] = useState<MobileTab>('agenda');
+  const [mobileTab, setMobileTab] = useState<MobileTab>('roteiros');
 
   const [itineraryModalOpen, setItineraryModalOpen] = useState(false);
   const [itineraryModalMode, setItineraryModalMode] = useState<'create' | 'edit'>('create');
@@ -146,7 +149,9 @@ export default function App() {
         setItineraries([]);
         setEvents([]);
         setActivities([]);
+        setTodayEventCounts({});
         setSelectedItineraryId(null);
+        setMobileTab('roteiros');
       }
     });
 
@@ -154,9 +159,18 @@ export default function App() {
       setWorkspaceReady(hasWorkspaceToken());
     });
 
+    const syncToday = () => {
+      const next = getTodayLocalYmd();
+      setTodayYmd((prev) => (prev === next ? prev : next));
+    };
+    window.addEventListener('focus', syncToday);
+    document.addEventListener('visibilitychange', syncToday);
+
     return () => {
       unsubAuth();
       unsubToken();
+      window.removeEventListener('focus', syncToday);
+      document.removeEventListener('visibilitychange', syncToday);
     };
   }, []);
 
@@ -218,6 +232,21 @@ export default function App() {
       unsubActivity();
     };
   }, [authReady, user?.email, activeItinerary?.id]);
+
+  const itineraryIdsKey = useMemo(
+    () => itineraries.map((it) => it.id).sort().join(','),
+    [itineraries]
+  );
+
+  useEffect(() => {
+    if (!authReady || !user?.email || !itineraryIdsKey) {
+      setTodayEventCounts({});
+      return;
+    }
+    const ids = itineraryIdsKey.split(',').filter(Boolean);
+    const unsub = subscribeTodayEventCounts(ids, user.email, todayYmd, setTodayEventCounts);
+    return () => unsub();
+  }, [authReady, user?.email, itineraryIdsKey, todayYmd]);
 
   const ensureWorkspaceToken = useCallback(async (): Promise<string> => {
     const existing = getWorkspaceAccessToken();
@@ -611,6 +640,7 @@ export default function App() {
         const deletedTitle = activeItinerary.title;
         await deleteItinerary(activeItinerary.id, user.email || '');
         setSelectedItineraryId(null);
+        setMobileTab('roteiros');
         showToast('success', `Roteiro "${deletedTitle}" excluído.`);
       },
     });
@@ -759,12 +789,13 @@ export default function App() {
               <ul className="divide-y divide-slate-100">
                 {itineraries.map((it) => {
                   const selected = it.id === activeItinerary?.id;
+                  const todayCount = todayEventCounts[it.id] ?? 0;
                   return (
                     <li key={it.id}>
                       <button
                         type="button"
                         onClick={() => setSelectedItineraryId(it.id)}
-                        className={`w-full text-left px-4 py-3.5 transition-colors cursor-pointer ${
+                        className={`w-full h-[78px] text-left px-4 flex flex-col justify-center transition-colors cursor-pointer ${
                           selected ? 'bg-rose-50/75' : 'hover:bg-slate-50'
                         }`}
                       >
@@ -779,6 +810,11 @@ export default function App() {
                           {it.linkedEmails.length}{' '}
                           {it.linkedEmails.length === 1 ? 'participante' : 'participantes'}
                         </p>
+                        {todayCount > 0 && (
+                          <p className="mt-0.5 text-xs font-semibold text-rose-600 truncate tabular-nums">
+                            {todayCount} {todayCount === 1 ? 'atividade hoje' : 'atividades hoje'}
+                          </p>
+                        )}
                       </button>
                     </li>
                   );
@@ -846,8 +882,8 @@ export default function App() {
 
             {itinerariesLoading ? (
               <div className="space-y-3">
-                <div className="h-20 rounded-2xl bg-white border border-slate-200 animate-pulse" />
-                <div className="h-20 rounded-2xl bg-white border border-slate-200 animate-pulse" />
+                <div className="h-24 rounded-2xl bg-white border border-slate-200 animate-pulse" />
+                <div className="h-24 rounded-2xl bg-white border border-slate-200 animate-pulse" />
               </div>
             ) : itineraries.length === 0 ? (
               <div className="bg-white border border-slate-200 rounded-2xl p-8 text-center">
@@ -871,38 +907,46 @@ export default function App() {
               </div>
             ) : (
               <div className="space-y-3">
-                {itineraries.map((it) => (
-                  <button
-                    key={it.id}
-                    type="button"
-                    onClick={() => {
-                      setSelectedItineraryId(it.id);
-                      setMobileTab('agenda');
-                    }}
-                    className="w-full text-left bg-white border border-slate-200 rounded-2xl overflow-hidden flex items-stretch hover:border-slate-300 transition-colors cursor-pointer"
-                  >
-                    <div className="w-24 shrink-0 relative bg-slate-100">
-                      {it.coverImageData ? (
-                        <img
-                          src={it.coverImageData}
-                          alt={it.title}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <MinimalGeometricCover className="w-full h-full" />
-                      )}
-                    </div>
-                    <div className="p-4 flex-1 min-w-0">
-                      <p className="font-display text-base font-bold text-slate-900 truncate">
-                        {it.title}
-                      </p>
-                      <p className="mt-1.5 text-[11px] text-slate-500">
-                        {it.linkedEmails.length}{' '}
-                        {it.linkedEmails.length === 1 ? 'participante' : 'participantes'}
-                      </p>
-                    </div>
-                  </button>
-                ))}
+                {itineraries.map((it) => {
+                  const todayCount = todayEventCounts[it.id] ?? 0;
+                  return (
+                    <button
+                      key={it.id}
+                      type="button"
+                      onClick={() => {
+                        setSelectedItineraryId(it.id);
+                        setMobileTab('agenda');
+                      }}
+                      className="w-full h-24 text-left bg-white border border-slate-200 rounded-2xl overflow-hidden flex items-stretch hover:border-slate-300 transition-colors cursor-pointer"
+                    >
+                      <div className="w-24 h-full shrink-0 relative bg-slate-100 overflow-hidden">
+                        {it.coverImageData ? (
+                          <img
+                            src={it.coverImageData}
+                            alt={it.title}
+                            className="absolute inset-0 w-full h-full object-cover"
+                          />
+                        ) : (
+                          <MinimalGeometricCover className="absolute inset-0 w-full h-full" />
+                        )}
+                      </div>
+                      <div className="px-4 py-3 flex-1 min-w-0 flex flex-col justify-center">
+                        <p className="font-display text-base font-bold text-slate-900 truncate leading-snug">
+                          {it.title}
+                        </p>
+                        <p className="mt-1 text-xs text-slate-500 truncate">
+                          {it.linkedEmails.length}{' '}
+                          {it.linkedEmails.length === 1 ? 'participante' : 'participantes'}
+                        </p>
+                        {todayCount > 0 && (
+                          <p className="mt-1 text-xs font-semibold text-rose-600 truncate tabular-nums">
+                            {todayCount} {todayCount === 1 ? 'atividade hoje' : 'atividades hoje'}
+                          </p>
+                        )}
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
             )}
           </div>
