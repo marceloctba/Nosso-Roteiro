@@ -53,7 +53,7 @@ export const SyncNotifyModal: React.FC<SyncNotifyModalProps> = ({
       aria-modal="true"
       aria-labelledby="sync-notify-title"
     >
-      <div className="w-full sm:max-w-md bg-white rounded-t-3xl sm:rounded-2xl border border-slate-200 shadow-xl p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))] sm:p-6">
+      <div className="w-full sm:max-w-[440px] bg-white rounded-t-3xl sm:rounded-2xl border border-slate-200/90 shadow-2xl p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))] sm:p-6">
         <div className="w-10 h-1.5 bg-slate-200 rounded-full mx-auto mb-4 sm:hidden" />
 
         <div className="flex items-start justify-between gap-4">
@@ -142,7 +142,7 @@ export const SyncNotifyModal: React.FC<SyncNotifyModalProps> = ({
             type="button"
             onClick={onClose}
             disabled={isProcessing}
-            className="min-h-[44px] px-4 py-2.5 rounded-xl border border-slate-300 bg-white text-sm font-semibold text-slate-700 hover:bg-slate-50 cursor-pointer"
+            className="min-h-[44px] sm:min-h-[40px] px-4 py-2 rounded-xl border border-slate-200 bg-white text-sm font-semibold text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition-colors cursor-pointer disabled:opacity-50 whitespace-nowrap"
           >
             Agora não
           </button>
@@ -150,7 +150,7 @@ export const SyncNotifyModal: React.FC<SyncNotifyModalProps> = ({
             type="button"
             disabled={isProcessing || (!syncCalendar && !sendGmail)}
             onClick={() => void onConfirm({ syncCalendar, sendGmail })}
-            className="min-h-[44px] px-5 py-2.5 rounded-xl bg-rose-600 text-sm font-semibold text-white hover:bg-rose-700 transition-colors cursor-pointer disabled:opacity-50"
+            className="min-h-[44px] sm:min-h-[40px] px-5 py-2 rounded-xl bg-rose-600 text-sm font-semibold text-white hover:bg-rose-700 transition-colors cursor-pointer disabled:opacity-50 whitespace-nowrap"
           >
             {isProcessing ? 'Executando...' : 'Confirmar ações'}
           </button>

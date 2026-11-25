@@ -223,7 +223,7 @@ export const EventModal: React.FC<EventModalProps> = ({
       aria-modal="true"
       aria-labelledby="event-modal-title"
     >
-      <div className="w-full sm:max-w-lg max-h-[92vh] flex flex-col bg-white rounded-t-3xl sm:rounded-2xl border border-slate-200 shadow-xl overflow-hidden pb-safe">
+      <div className="w-full sm:max-w-lg max-h-[92vh] flex flex-col bg-white rounded-t-3xl sm:rounded-2xl border border-slate-200/90 shadow-2xl overflow-hidden">
         <div className="pt-3 sm:hidden">
           <div className="w-10 h-1.5 bg-slate-200 rounded-full mx-auto" />
         </div>
@@ -243,7 +243,10 @@ export const EventModal: React.FC<EventModalProps> = ({
           </button>
         </div>
 
-        <form onSubmit={(e) => void handleSubmit(e)} className="flex-1 overflow-y-auto px-6 py-5 space-y-4">
+        <form
+          onSubmit={(e) => void handleSubmit(e)}
+          className="flex-1 overflow-y-auto px-6 pt-5 pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))] sm:pb-6 space-y-4"
+        >
           <div>
             <label htmlFor="ev-title" className="block text-xs font-semibold text-slate-700 mb-1.5">
               Nome da atividade ou local
@@ -585,14 +588,14 @@ export const EventModal: React.FC<EventModalProps> = ({
               type="button"
               onClick={onClose}
               disabled={isSubmitting || isUploadingFile}
-              className="min-h-[44px] px-4 py-2.5 rounded-xl border border-slate-300 bg-white text-sm font-semibold text-slate-700 hover:bg-slate-50 cursor-pointer"
+              className="min-h-[44px] sm:min-h-[40px] px-4 py-2 rounded-xl border border-slate-200 bg-white text-sm font-semibold text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition-colors cursor-pointer whitespace-nowrap"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={isSubmitting || isUploadingFile}
-              className="min-h-[44px] px-5 py-2.5 rounded-xl bg-rose-600 text-sm font-semibold text-white hover:bg-rose-700 transition-colors cursor-pointer disabled:opacity-60"
+              className="min-h-[44px] sm:min-h-[40px] px-5 py-2 rounded-xl bg-rose-600 text-sm font-semibold text-white hover:bg-rose-700 transition-colors cursor-pointer disabled:opacity-60 whitespace-nowrap"
             >
               {isSubmitting
                 ? 'Salvando...'

@@ -23,8 +23,10 @@
   font-variant-numeric: tabular-nums;
 }
 
-.pb-safe {
-  padding-bottom: env(safe-area-inset-bottom, 0px);
+@layer utilities {
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
 }
 
 /* Official Google Sign-In button styling */
