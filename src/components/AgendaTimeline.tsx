@@ -262,19 +262,21 @@ export const AgendaTimeline: React.FC<AgendaTimelineProps> = ({
                                 (ev.attachments && ev.attachments.length > 0)) && (
                                 <div className="mt-2.5 space-y-1.5">
                                   {ev.location && (
-                                    <div className="flex items-center gap-2 text-sm text-slate-700 min-w-0">
+                                    <div className="flex items-center gap-2 text-xs min-w-0">
                                       <MapPin className="w-4 h-4 text-slate-400 shrink-0" />
-                                      <span className="truncate">{ev.location}</span>
-                                      {mapsUrl && (
+                                      {mapsUrl ? (
                                         <a
                                           href={mapsUrl}
                                           target="_blank"
                                           rel="noopener noreferrer"
-                                          className="inline-flex items-center gap-1 text-xs font-semibold text-rose-600 hover:underline shrink-0"
+                                          className="font-medium text-rose-600 hover:underline truncate"
                                         >
-                                          <span>Mapa</span>
-                                          <ExternalLink className="w-3 h-3" />
+                                          {ev.location}
                                         </a>
+                                      ) : (
+                                        <span className="font-medium text-slate-700 truncate">
+                                          {ev.location}
+                                        </span>
                                       )}
                                     </div>
                                   )}
